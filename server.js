@@ -104,6 +104,32 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  // 1.1. Local Network IP for QR Code Mobile Access
+  if (pathname === '/api/network-ip') {
+    const os = require('os');
+    const nets = os.networkInterfaces();
+    let localIp = '127.0.0.1';
+
+    for (const name of Object.keys(nets)) {
+      for (const net of nets[name]) {
+        // Skip over non-IPv4 and internal (i.e. 127.0.0.1) addresses
+        if (net.family === 'IPv4' && !net.internal) {
+          localIp = net.address;
+          break;
+        }
+      }
+      if (localIp !== '127.0.0.1') break;
+    }
+
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({
+      ip: localIp,
+      port: PORT,
+      mobileUrl: `http://${localIp}:${PORT}`
+    }));
+    return;
+  }
+
   // 2. Models Catalog endpoint (List 20 models + status)
   if (pathname === '/api/catalog') {
     const ollamaStatus = await checkService('ollama', TARGET_SERVICES.ollama, '/api/tags');
@@ -337,10 +363,10 @@ const server = http.createServer(async (req, res) => {
   });
 });
 
-server.listen(PORT, '127.0.0.1', () => {
+server.listen(PORT, '0.0.0.0', () => {
   console.log(`=======================================================`);
   console.log(`🚀 LOCAL AI NEXUS SERVER CON AGENTE & 20 MODELOS`);
   console.log(`📍 Accede en tu navegador: http://localhost:${PORT}`);
-  console.log(`🤖 Agente de PC activo en /api/agent/*`);
+  console.log(`📱 Acceso en red Wi-Fi activo en el puerto ${PORT}`);
   console.log(`=======================================================`);
 });

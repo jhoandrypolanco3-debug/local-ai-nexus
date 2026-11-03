@@ -58,6 +58,13 @@ let availableModels = [];
 let currentGeneratedCode = '';
 let activeTab = 'map';
 
+// Voice & RAG State
+let ttsEnabled = false;
+let isRecording = false;
+let speechRecognizer = null;
+let activeRagContext = '';
+let activeRagFileName = '';
+
 const SYSTEM_PRESETS = {
   general: 'Eres un asistente de IA local útil, inteligente, preciso y respetuoso. Responde siempre en español brevemente.',
   ftc: 'Eres un programador senior y mentor experto en FIRST Tech Challenge (FTC). Escribes código Java limpio, robusto y listo para compilar en Android Studio usando el FTC SDK (LinearOpMode, TeleOp, Autonomous, HardwareMap, DcMotor, Servo, AprilTags).',
@@ -98,6 +105,8 @@ document.addEventListener('DOMContentLoaded', () => {
   scanAllServices();
   loadCatalogGrid();
   updateStorageMeter();
+  initSpeechRecognition();
+  renderDefaultDiagram();
   lucide.createIcons();
 });
 
@@ -128,6 +137,248 @@ async function updateStorageMeter() {
       diskFreeEl.innerText = `${data.remainingGB} GB restantes del límite de 5 GB`;
     }
   } catch (e) {}
+}
+
+// ================= FEATURE 1: RAG & DOCUMENT UPLOAD =================
+async function handleFileUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  showToast(`Procesando documento "${file.name}" para RAG local...`, 'info');
+  activeRagFileName = file.name;
+
+  if (file.name.endsWith('.pdf')) {
+    const reader = new FileReader();
+    reader.onload = async function() {
+      const typedarray = new Uint8Array(this.result);
+      try {
+        const pdf = await pdfjsLib.getDocument(typedarray).promise;
+        let fullText = '';
+        for (let i = 1; i <= Math.min(pdf.numPages, 10); i++) {
+          const page = await pdf.getPage(i);
+          const textContent = await page.getTextContent();
+          fullText += textContent.items.map(item => item.str).join(' ') + '\n';
+        }
+        activeRagContext = fullText.slice(0, 4500);
+        activateRAGBadge(file.name);
+        showToast(`PDF cargado con éxito. El agente ahora responderá basándose en este archivo.`, 'success');
+      } catch (err) {
+        showToast(`Error al leer PDF: ${err.message}`, 'error');
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  } else {
+    const textReader = new FileReader();
+    textReader.onload = function(evt) {
+      activeRagContext = evt.target.result.slice(0, 4500);
+      activateRAGBadge(file.name);
+      showToast(`Documento cargado en la memoria RAG local.`, 'success');
+    };
+    textReader.readAsText(file);
+  }
+}
+
+function activateRAGBadge(filename) {
+  const badge = document.getElementById('rag-badge');
+  const nameEl = document.getElementById('rag-filename');
+  if (badge && nameEl) {
+    nameEl.innerText = filename;
+    badge.classList.remove('hidden');
+    badge.classList.add('flex');
+    lucide.createIcons();
+  }
+}
+
+function clearRAGContext() {
+  activeRagContext = '';
+  activeRagFileName = '';
+  const badge = document.getElementById('rag-badge');
+  if (badge) {
+    badge.classList.add('hidden');
+    badge.classList.remove('flex');
+  }
+  showToast('Memoria RAG limpiada', 'info');
+}
+
+// ================= FEATURE 2: BIDIRECTIONAL VOICE (STT & TTS) =================
+function initSpeechRecognition() {
+  const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRec) return;
+
+  speechRecognizer = new SpeechRec();
+  speechRecognizer.continuous = false;
+  speechRecognizer.lang = 'es-ES';
+  speechRecognizer.interimResults = false;
+
+  speechRecognizer.onresult = function(event) {
+    const transcript = event.results[0][0].transcript;
+    const input = document.getElementById('chat-input');
+    if (input) {
+      input.value = transcript;
+      showToast(`Escuchado: "${transcript}"`, 'info');
+      handleChatSubmit();
+    }
+  };
+
+  speechRecognizer.onerror = function(event) {
+    isRecording = false;
+    updateMicIcon();
+    showToast(`Micrófono: ${event.error}`, 'error');
+  };
+
+  speechRecognizer.onend = function() {
+    isRecording = false;
+    updateMicIcon();
+  };
+}
+
+function toggleMicrophone() {
+  if (!speechRecognizer) {
+    showToast('Tu navegador no soporta reconocimiento de voz nativo', 'error');
+    return;
+  }
+
+  if (isRecording) {
+    speechRecognizer.stop();
+    isRecording = false;
+  } else {
+    try {
+      speechRecognizer.start();
+      isRecording = true;
+      showToast('Escuchando... Habla ahora en español', 'info');
+    } catch (e) {
+      isRecording = false;
+    }
+  }
+  updateMicIcon();
+}
+
+function updateMicIcon() {
+  const btn = document.getElementById('btn-mic');
+  const icon = document.getElementById('mic-icon');
+  if (!btn) return;
+
+  if (isRecording) {
+    btn.className = 'p-3 rounded-xl bg-rose-600 text-white animate-pulse border border-rose-400 flex items-center justify-center shrink-0';
+  } else {
+    btn.className = 'p-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-cyan-300 transition border border-white/10 flex items-center justify-center shrink-0';
+  }
+}
+
+function toggleVoiceAudio() {
+  ttsEnabled = !ttsEnabled;
+  const icon = document.getElementById('tts-icon');
+  const text = document.getElementById('tts-text');
+  if (text) text.innerText = ttsEnabled ? 'Voz: ON' : 'Voz: OFF';
+  if (icon) icon.className = ttsEnabled ? 'w-4 h-4 text-emerald-400' : 'w-4 h-4 text-slate-400';
+
+  if (ttsEnabled) {
+    speakText('Voz en vivo activada. Escucharás las respuestas de tu IA.');
+  } else {
+    window.speechSynthesis.cancel();
+  }
+}
+
+function speakText(text) {
+  if (!ttsEnabled || !window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  // Strip code blocks or markdown
+  const clean = text.replace(/```[\s\S]*?```/g, 'código omitido').replace(/[#*`_]/g, '');
+  const utterance = new SpeechSynthesisUtterance(clean.slice(0, 400));
+  utterance.lang = 'es-ES';
+  utterance.rate = 1.05;
+  window.speechSynthesis.speak(utterance);
+}
+
+// ================= FEATURE 3: MOBILE REMOTE QR =================
+async function openQRModal() {
+  const modal = document.getElementById('modal-qr');
+  const qrBox = document.getElementById('qrcode-box');
+  const urlText = document.getElementById('mobile-url-text');
+  if (!modal) return;
+
+  modal.classList.remove('hidden');
+  qrBox.innerHTML = '';
+  urlText.innerText = 'Consultando dirección de red Wi-Fi...';
+
+  try {
+    const res = await fetch('/api/network-ip');
+    const data = await res.json();
+
+    urlText.innerText = data.mobileUrl;
+    new QRCode(qrBox, {
+      text: data.mobileUrl,
+      width: 170,
+      height: 170,
+      colorDark: '#070a12',
+      colorLight: '#ffffff'
+    });
+  } catch (err) {
+    urlText.innerText = `http://${window.location.hostname}:3333`;
+    new QRCode(qrBox, {
+      text: `http://${window.location.hostname}:3333`,
+      width: 170,
+      height: 170
+    });
+  }
+}
+
+function closeQRModal() {
+  const modal = document.getElementById('modal-qr');
+  if (modal) modal.classList.add('hidden');
+}
+
+// ================= FEATURE 4: MERMAID ROBOTICS DIAGRAMS =================
+function renderDefaultDiagram() {
+  const container = document.getElementById('mermaid-render-container');
+  if (!container) return;
+
+  const sampleGraph = `graph TD
+    Start([▶️ INICIO AUTÓNOMO 30s]) --> Scan[📷 Cámara: Escanear AprilTag]
+    Scan --> Check{¿Tag Detectado?}
+    Check -->|Posición Izquierda| Left[Alinear chasis Mecanum a Zona 1]
+    Check -->|Posición Central| Center[Avanzar 24 in a Submersible Central]
+    Check -->|Posición Derecha| Right[Alinear chasis Mecanum a Zona 3]
+    Center --> Arm[🦾 Extender Elevador & Abrir Garra]
+    Left --> Arm
+    Right --> Arm
+    Arm --> Drop[Soltar Muestra en Canasta]
+    Drop --> Retract[Retraer Brazo a Posición Cero]
+    Retract --> Park[🏁 Estacionar en Zona de Observación]
+  `;
+
+  renderMermaidGraph(sampleGraph, 'Estrategia de Chasis Mecanum & AprilTags');
+}
+
+function generateFTCDiagram() {
+  const sampleGraph = `graph TD
+    A([▶️ INICIO AUTÓNOMO FTC]) --> B[Avanzar 30 in a máxima aceleración]
+    B --> C[Girar 45° con sensor IMU]
+    C --> D[Activar Intake con Motor DcMotorEx]
+    D --> E{Sensor de Color}
+    E -->|Muestra Amarilla| F[Guardar en compartimento]
+    E -->|Elemento no deseado| G[Invertir motor de expulsión]
+    F --> H[Navegar hacia Submersible con Odometría]
+    H --> I([🏁 Estacionar y Finalizar])
+  `;
+  renderMermaidGraph(sampleGraph, 'Estrategia con Sensores de Color & Odometría');
+  showToast('¡Nuevo diagrama de estrategia FTC generado!', 'success');
+}
+
+async function renderMermaidGraph(chartCode, title) {
+  const container = document.getElementById('mermaid-render-container');
+  const titleEl = document.getElementById('diagram-title');
+  if (!container) return;
+
+  if (titleEl) titleEl.innerText = title;
+
+  try {
+    const id = 'mermaid-chart-' + Date.now();
+    const { svg } = await mermaid.render(id, chartCode);
+    container.innerHTML = svg;
+  } catch (err) {
+    container.innerHTML = `<pre class="text-xs text-amber-300 font-mono">${chartCode}</pre>`;
+  }
 }
 
 // ================= FTC TEMPLATES & AGENT =================
@@ -170,9 +421,13 @@ async function runAgentTask() {
   codeBox.innerHTML = '<span class="text-cyan-400">Generando código en tiempo real con tu modelo local...</span>';
 
   try {
-    const systemPrompt = `Eres un agente de desarrollo de software y mentor de FIRST Tech Challenge (FTC).
-Tu trabajo es generar código Java de grado de competición, limpio, completo, sin placeholders incompletos, listo para pegar en Android Studio / TeamCode.
+    let systemPrompt = `Eres un agente de desarrollo de software y mentor de FIRST Tech Challenge (FTC).
+Tu trabajo es generar código Java de competición, limpio, sin placeholders incompletos, listo para Android Studio / TeamCode.
 Devuelve el código dentro de un bloque \`\`\`java y una breve explicación al final.`;
+
+    if (activeRagContext) {
+      systemPrompt += `\n\n[CONTEXTO RAG - DOCUMENTO ${activeRagFileName}]:\n${activeRagContext}`;
+    }
 
     let accumulatedCode = '';
     const res = await sendToOllama(modelId, task, systemPrompt, 0.2, (chunk) => {
@@ -183,7 +438,6 @@ Devuelve el código dentro de un bloque \`\`\`java y una breve explicación al f
     currentGeneratedCode = res;
     codeBox.innerText = currentGeneratedCode;
 
-    // If file path specified, auto-save to PC via Agent Server!
     if (targetPath) {
       statusText.innerText = `Guardando archivo directamente en tu PC en ${targetPath}...`;
       const saveRes = await fetch('/api/agent/write-file', {
@@ -291,13 +545,12 @@ async function loadCatalogGrid() {
 
     lucide.createIcons();
   } catch (err) {
-    if (grid) grid.innerHTML = `<div class="col-span-3 text-rose-400 p-4">Error al cargar el catálogo: ${err.message}</div>`;
-    if (tier3Grid) tier3Grid.innerHTML = `<div class="col-span-4 text-rose-400 p-4">Error al cargar los 20 modelos: ${err.message}</div>`;
+    if (grid) grid.innerHTML = `<div class="col-span-4 text-rose-400 p-4">Error: ${err.message}</div>`;
   }
 }
 
 async function installModelViaAgent(modelId) {
-  showToast(`Iniciando descarga de ${modelId}... Ejecutándose en segundo plano`, 'info');
+  showToast(`Iniciando descarga de ${modelId}...`, 'info');
   try {
     const res = await fetch('/api/agent/run-cmd', {
       method: 'POST',
@@ -309,6 +562,7 @@ async function installModelViaAgent(modelId) {
       showToast(`¡Modelo ${modelId} instalado con éxito!`, 'success');
       loadCatalogGrid();
       scanAllServices();
+      updateStorageMeter();
     } else {
       showToast(`Error: ${data.error || data.stderr}`, 'error');
     }
@@ -319,8 +573,6 @@ async function installModelViaAgent(modelId) {
 
 // ================= RADAR & SERVICES =================
 async function scanAllServices() {
-  const indicatorDot = document.getElementById('status-indicator-dot');
-  const indicatorText = document.getElementById('status-indicator-text');
   let onlineCount = 0;
   availableModels = [];
 
@@ -340,14 +592,7 @@ async function scanAllServices() {
                 let label = `${m} (${s.name})`;
                 if (m.includes('llama3.2')) label = `⚡ ${m} (General Rápido)`;
                 if (m.includes('coder')) label = `💻 ${m} (Experto FTC & Programación)`;
-                if (m.includes('r1')) label = `🧠 ${m} (Razonamiento)`;
-
-                availableModels.push({
-                  id: m,
-                  name: label,
-                  serviceId: s.id,
-                  useProxy: true
-                });
+                availableModels.push({ id: m, name: label, serviceId: s.id, useProxy: true });
               });
             }
           } else {
@@ -363,11 +608,6 @@ async function scanAllServices() {
       { id: 'llama3.2:1b', name: '⚡ llama3.2:1b (General Rápido)', serviceId: 'ollama', useProxy: true },
       { id: 'qwen2.5-coder:1.5b', name: '💻 qwen2.5-coder:1.5b (Programador FTC)', serviceId: 'ollama', useProxy: true }
     ];
-  }
-
-  if (indicatorDot && indicatorText) {
-    indicatorDot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-400';
-    indicatorText.innerText = `${onlineCount > 0 ? onlineCount : 1} servicio(s) en línea`;
   }
 
   populateChatModelsDropdown();
@@ -438,7 +678,6 @@ async function populateChatModelsDropdown() {
     </option>
   `).join('');
 
-  // Add remaining uninstalled models from the 20 catalog
   const uninstalled = catalogModels.filter(c => !c.installed);
   const uninstalledHtml = uninstalled.map(c => `
     <option value="${c.id}" data-service="ollama" data-uninstalled="true">
@@ -482,11 +721,6 @@ function onModelChange() {
   }
 }
 
-function applySystemPreset() {
-  const select = document.getElementById('chat-preset-select');
-  // Preset handler
-}
-
 function handleInputKeydown(e) {
   if (e.key === 'Enter' && !e.shiftKey) {
     e.preventDefault();
@@ -515,12 +749,24 @@ async function handleChatSubmit(e) {
   btnSend.disabled = true;
 
   try {
-    await sendToOllama(modelId, text, SYSTEM_PRESETS.general, 0.7, (partial) => {
+    let systemPrompt = SYSTEM_PRESETS.general;
+    if (activeRagContext) {
+      systemPrompt += `\n\n[DOCUMENTO DE REFERENCIA - ${activeRagFileName}]:\n${activeRagContext}\nUsa este documento para responder con precisión si es relevante.`;
+    }
+
+    let fullAnswer = '';
+    await sendToOllama(modelId, text, systemPrompt, 0.7, (partial) => {
+      fullAnswer = partial;
       updateChatMessage(botMsgId, partial);
     });
+
+    // Speak out loud if voice is enabled!
+    if (ttsEnabled) {
+      speakText(fullAnswer);
+    }
   } catch (err) {
     if (err.message.includes('not found') || err.message.includes('404')) {
-      updateChatMessage(botMsgId, `⚠️ Ese modelo no está instalado. Cambiando automáticamente a **llama3.2:1b** para responderte de inmediato...`);
+      updateChatMessage(botMsgId, `⚠️ Ese modelo no está instalado. Cambiando automáticamente a **llama3.2:1b**...`);
       try {
         await sendToOllama('llama3.2:1b', text, SYSTEM_PRESETS.general, 0.7, (partial) => {
           updateChatMessage(botMsgId, partial);
@@ -644,7 +890,7 @@ function clearChatHistory() {
 // ================= TABS =================
 function switchTab(tabId) {
   activeTab = tabId;
-  const views = ['map', 'agent', 'catalog', 'chat', 'radar'];
+  const views = ['map', 'agent', 'chat', 'diagrams', 'catalog', 'radar'];
 
   views.forEach(v => {
     const viewEl = document.getElementById(`view-${v}`);
@@ -664,6 +910,7 @@ function switchTab(tabId) {
   });
 
   if (tabId === 'catalog') loadCatalogGrid();
+  if (tabId === 'diagrams') renderDefaultDiagram();
   lucide.createIcons();
 }
 

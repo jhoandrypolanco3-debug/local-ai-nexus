@@ -1,71 +1,80 @@
-# 🌐 Local AI Nexus — Tu Ecosistema Central de IA
+# 🌐 Local AI Nexus — Ecosistema Central de IA 100% Local & Agente FTC
 
-**Local AI Nexus** es una plataforma y panel de control unificado diseñado para concentrar, orquestar y monitorear todas las inteligencias artificiales que corren de manera local en tu PC.
-
----
-
-## ⚡ Inicio Rápido (1 Clic)
-
-1. Ve a la carpeta del proyecto:
-   `C:\Users\jhoan\.gemini\antigravity\scratch\ai-ecosystem`
-2. Haz doble clic en **`iniciar-ecosistema.bat`** (o simplemente abre `index.html` en tu navegador).
-3. ¡Listo! El radar escaneará tus puertos locales automáticamente.
+**Local AI Nexus** es una plataforma y panel de control unificado diseñado para concentrar, orquestar y monitorear todas las inteligencias artificiales que corren de manera local en tu PC, con arquitectura isométrica de 5 capas, herramientas especializadas para **FIRST Tech Challenge (FTC)** y agente de control con acceso a disco.
 
 ---
 
-## 🛠️ ¿Qué incluye este Ecosistema?
+## ⚡ Novedades y 5 Superpoderes Integrados
 
-1. **Radar de Salud de IAs (Monitor en Tiempo Real)**:
-   - Detecta si **Ollama**, **LM Studio**, **ComfyUI**, **Stable Diffusion WebUI**, **LocalAI** o **Whisper** están encendidos.
-   - Mide la latencia en milisegundos (`ms`) de cada motor.
-   - Permite añadir cualquier nuevo puerto o servidor con el botón *"+ Añadir Servicio Personalizado"*.
+1. **📄 RAG Local (Subida y Extracción de Documentos & PDF)**:
+   - Sube manuales de juego de FTC, reglamentos o código (`.pdf`, `.txt`, `.java`, `.md`, `.json`).
+   - El ecosistema extrae el texto en el cliente (usando PDF.js) y lo inyecta como contexto relevante para tus consultas al modelo sin enviar un solo byte a la nube.
 
-2. **Chat Unificado Multimodelo**:
-   - Detecta y agrupa automáticamente todos los modelos descargados en tu máquina (ej. `llama3.2`, `mistral`, `deepseek-r1`, `qwen2.5-coder`).
-   - Puedes cambiar de modelo al instante sin cambiar de ventana.
-   - Ajuste de temperatura, sistema de roles predefinidos (Programador Senior, Creativo, Conciso) y soporte completo para Markdown y bloques de código.
+2. **🎙️ Modo de Voz Bidireccional (STT + TTS)**:
+   - Habla directamente con tu robot o IA usando el micrófono (Web Speech STT).
+   - Respuestas habladas con síntesis de voz neural (SpeechSynthesis TTS) y selector de velocidad.
 
-3. **Estudio Visual (Generación de Imágenes)**:
-   - Enlace directo con **Stable Diffusion WebUI / Forge** (`http://localhost:7860`) o **ComfyUI** (`http://localhost:8188`).
-   - Prompts positivos y negativos, selección de dimensiones (1:1, 16:9, vertical), y galería con descarga en 1 clic.
+3. **📱 Acceso Remoto Móvil con Código QR (Wi-Fi Local)**:
+   - Escanea el código QR generado en el dashboard con tu smartphone o tablet conectado al mismo Wi-Fi.
+   - Controla el ecosistema y consulta tus modelos desde el taller o la cancha de robótica sin cables.
 
-4. **Orquestador de Flujos (Pipelines Multi-IA)**:
-   - **Flujo "Idea ➔ Arte"**: Tu modelo de lenguaje local toma tu idea en español, la transforma en un prompt cinematográfico en inglés y lo envía directamente al generador de imágenes.
-   - **Flujo "Analista y Extractor"**: Resume y extrae conclusiones de documentos largos a velocidad local.
+4. **📊 Visualizador de Estrategia Robótica FTC con Diagramas Mermaid.js**:
+   - Genera y visualiza al instante diagramas de flujo para rutinas autónomas (`AutonomousMecanum`), máquinas de estados y cinemática de brazos o intake.
+
+5. **🖥️ Acceso Directo de Escritorio como Aplicación Nativa**:
+   - Acceso de un clic desde el escritorio de Windows (`Local AI Nexus.lnk`) ejecutándose como app independiente sin barras de navegador.
 
 ---
 
-## 🔌 Cómo Activar tus Motores Locales
+## 🏛️ Arquitectura Isométrica de 5 Capas
 
-### 🦙 1. Ollama (Modelos de Lenguaje)
-Ollama ya está instalado en tu equipo (`C:\Users\jhoan\AppData\Local\Programs\Ollama\ollama.exe`).
-Para permitir que el navegador web se comunique con él sin bloqueos de seguridad (CORS), abre PowerShell o CMD y ejecuta:
-```powershell
-$env:OLLAMA_ORIGINS="*"
-ollama serve
 ```
-*(O en CMD: `set OLLAMA_ORIGINS="*" && ollama serve`)*
-
-Modelos recomendados para descargar:
-- `ollama run llama3.2`
-- `ollama run qwen2.5-coder:7b`
-- `ollama run deepseek-r1:8b`
-
-### 🧪 2. LM Studio
-1. Abre LM Studio.
-2. Ve a la pestaña **Local Server** (icono `< >`).
-3. Carga el modelo que desees y pulsa **Start Server**. Estará disponible en `http://localhost:1234`.
-
-### 🎨 3. Stable Diffusion WebUI / Forge
-Edita tu `webui-user.bat` y asegúrate de incluir:
-```bat
-set COMMANDLINE_ARGS=--api --cors-allow-origins=*
+┌────────────────────────────────────────────────────────┐
+│  Tier 5: Interactive User Experience (UI / UX / Voice)  │
+├────────────────────────────────────────────────────────┤
+│  Tier 4: Model Catalog & FTC Specialized Agents        │
+├────────────────────────────────────────────────────────┤
+│  Tier 3: Execution Runtime & Local Proxy (Node.js)     │
+├────────────────────────────────────────────────────────┤
+│  Tier 2: AI Inference Engines (Ollama, SD, LM Studio)  │
+├────────────────────────────────────────────────────────┤
+│  Tier 1: Hardware & Strict Storage Guard (<= 5 GB)     │
+└────────────────────────────────────────────────────────┘
 ```
-Esto habilita la API REST para que el panel pueda generar y recibir imágenes.
 
 ---
 
-## 🔒 Privacidad Absoluta
-- 0% telemetría externa.
-- 100% de las solicitudes se realizan contra tu propio `localhost`.
-- Tus conversaciones, datos y modelos nunca salen de tu ordenador.
+## 🚀 Inicio Rápido
+
+1. **Vía Acceso Directo**:
+   - Haz doble clic en el icono **`Local AI Nexus`** en tu Escritorio de Windows.
+
+2. **Vía Terminal / Batch**:
+   ```bat
+   iniciar-ecosistema.bat
+   ```
+   O manualmente con Node.js:
+   ```powershell
+   node server.js
+   ```
+   Abre tu navegador en: [http://localhost:3333](http://localhost:3333)
+
+---
+
+## 🛡️ Guardián de Almacenamiento (Estricto <= 5 GB)
+El ecosistema supervisa permanentemente la carpeta de pesos y blobs de Ollama para garantizar que el almacenamiento nunca sobrepase el límite máximo de **5.0 GB**, protegiendo el espacio disponible de tu disco SSD/HDD en Windows.
+
+---
+
+## 🤖 Agente Autónomo FTC (Java)
+Incluye plantillas listas para producción y generación de código:
+- **`AutonomousMecanum`**: Rutina autónoma con encoders y sensores de distancia.
+- **`TeleOp`**: Control de chasis omnidireccional mecanum con gamepad y control de potencia.
+- **`RobotHardware`**: Mapeo centralizado de hardware motors, servos y sensores.
+- **Guardado físico directo**: Botón para escribir archivos `.java` directamente en tu carpeta de proyecto.
+
+---
+
+## 🔒 Privacidad y Costo
+- **Costo:** 100% Gratuito y Open Source.
+- **Privacidad:** 0% telemetría, 100% offline y local.

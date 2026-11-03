@@ -3,11 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Local AI Nexus - Ecosistema de 5 Capas (5-Tier AI Architecture)</title>
+  <title>Local AI Nexus - Ecosistema de IA de 5 Capas & Agente FTC</title>
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Marked.js para Markdown -->
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <!-- Mermaid.js para Diagramas de Robótica -->
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <!-- PDF.js para Lectura RAG de Documentos -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <!-- QRCode.js para Acceso Móvil -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
   <link rel="stylesheet" href="styles.css">
@@ -32,7 +38,10 @@
           }
         }
       }
-    }
+    };
+    // Initialize Mermaid
+    mermaid.initialize({ startOnLoad: false, theme: 'dark' });
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
   </script>
 </head>
 <body class="bg-dark-950 text-slate-100 min-h-screen flex flex-col antialiased selection:bg-indigo-500 selection:text-white">
@@ -47,20 +56,20 @@
         <div>
           <div class="flex items-center space-x-2">
             <h1 class="text-lg font-bold tracking-tight bg-gradient-to-r from-white via-slate-100 to-indigo-300 bg-clip-text text-transparent">
-              Local AI Nexus — Arquitectura de 5 Capas
+              Local AI Nexus & Agente PC
             </h1>
             <span class="text-[10px] px-2 py-0.5 rounded-full font-semibold uppercase tracking-wider bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
-              5-Tier Local AI
+              5-Tier Architecture
             </span>
           </div>
-          <p class="text-xs text-slate-400">Panel Central de Orquestación, Robótica FTC y Agente de PC</p>
+          <p class="text-xs text-slate-400">Panel Central de IA, Robótica FTC, Voz & RAG Local</p>
         </div>
       </div>
 
-      <!-- Quick Status Badges -->
-      <div class="hidden md:flex items-center space-x-3">
+      <!-- Quick Action Controls in Header -->
+      <div class="flex items-center space-x-2 sm:space-x-3">
         <!-- 5 GB Storage Guard -->
-        <div id="storage-guard-widget" class="flex items-center space-x-2 px-3 py-1.5 rounded-full bg-slate-900/90 border border-white/10 text-xs shadow-inner">
+        <div id="storage-guard-widget" class="hidden md:flex items-center space-x-2 px-3 py-1.5 rounded-full bg-slate-900/90 border border-white/10 text-xs shadow-inner" title="Límite estricto de 5 GB para modelos">
           <i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-400"></i>
           <span>Cuota: <strong id="storage-used-text" class="text-white">2.15</strong> / 5.0 GB</span>
           <div class="w-16 h-1.5 bg-slate-800 rounded-full overflow-hidden">
@@ -68,10 +77,17 @@
           </div>
         </div>
 
-        <div id="header-status-summary" class="flex items-center space-x-2 px-3 py-1.5 rounded-full bg-slate-900/90 border border-white/10 text-xs">
-          <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 pulse-online" id="status-indicator-dot"></span>
-          <span class="text-slate-300 font-medium" id="status-indicator-text">Ollama En Línea (23 ms)</span>
-        </div>
+        <!-- TTS Voice Toggle -->
+        <button onclick="toggleVoiceAudio()" id="btn-toggle-tts" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition text-xs flex items-center space-x-1.5 border border-white/10" title="Activar/Desactivar lectura por voz">
+          <i data-lucide="volume-2" class="w-4 h-4 text-cyan-400" id="tts-icon"></i>
+          <span class="hidden sm:inline" id="tts-text">Voz: OFF</span>
+        </button>
+
+        <!-- QR Mobile Remote Access -->
+        <button onclick="openQRModal()" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition text-xs flex items-center space-x-1.5 border border-white/10" title="Controlar desde el Celular">
+          <i data-lucide="qr-code" class="w-4 h-4 text-purple-400"></i>
+          <span class="hidden sm:inline">Celular QR</span>
+        </button>
 
         <button id="btn-refresh-all" onclick="scanAllServices()" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition flex items-center space-x-1 text-xs border border-white/10" title="Reescanear conexiones">
           <i data-lucide="refresh-cw" class="w-4 h-4"></i>
@@ -88,12 +104,17 @@
 
       <button onclick="switchTab('agent')" id="tab-agent" class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center space-x-2 transition">
         <i data-lucide="cpu" class="w-4 h-4 text-emerald-400"></i>
-        <span>🤖 Agente Autónomo (PC & FTC)</span>
+        <span>🤖 Agente Autónomo & FTC</span>
       </button>
 
       <button onclick="switchTab('chat')" id="tab-chat" class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center space-x-2 transition">
         <i data-lucide="message-square" class="w-4 h-4"></i>
-        <span>Chat Multimodelo</span>
+        <span>Chat & Voz</span>
+      </button>
+
+      <button onclick="switchTab('diagrams')" id="tab-diagrams" class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center space-x-2 transition">
+        <i data-lucide="git-branch" class="w-4 h-4 text-amber-400"></i>
+        <span>📊 Diagramas de Estrategia</span>
       </button>
 
       <button onclick="switchTab('catalog')" id="tab-catalog" class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center space-x-2 transition">
@@ -121,7 +142,7 @@
             Ecosistema de IA Local — Arquitectura de 5 Capas
           </h2>
           <p class="text-sm text-slate-400">
-            Diagrama interactivo de tu ecosistema. Haz clic en cualquier capa o componente para interactuar con él.
+            Haz clic en cualquier capa interactiva o explora los 20 modelos locales listados abajo.
           </p>
         </div>
         <div class="flex items-center space-x-2">
@@ -164,7 +185,7 @@
         <div onclick="switchTab('agent')" class="tier-hotspot top-[68%] left-[2%] w-[45%] h-[28%]" title="Tier 4: Vector Store & Memory - Base de Conocimiento FTC">
           <div class="absolute bottom-3 left-3 px-2.5 py-1 rounded bg-amber-950/80 text-amber-300 font-mono text-[10px] border border-amber-400/40 flex items-center gap-1.5 shadow-lg backdrop-blur-sm">
             <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
-            <span>TIER 4: VECTOR STORE & MEMORY (Memoria FTC)</span>
+            <span>TIER 4: VECTOR STORE & MEMORY (RAG & Reglas FTC)</span>
           </div>
         </div>
 
@@ -178,52 +199,58 @@
       </div>
 
       <!-- Quick Interactive Action Bar Below Infographic -->
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+      <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 pt-2">
         <button onclick="switchTab('agent')" class="glass-panel p-4 rounded-xl border border-white/10 hover:border-cyan-400/50 text-left transition flex items-center space-x-3 group">
           <div class="w-10 h-10 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400">
             <i data-lucide="bot" class="w-5 h-5"></i>
           </div>
           <div>
             <h4 class="text-xs font-bold text-white group-hover:text-cyan-300 transition">Agente Autónomo FTC</h4>
-            <p class="text-[11px] text-slate-400">Escribir código Java y guardarlo en PC</p>
+            <p class="text-[11px] text-slate-400">Escribir código Java y guardarlo</p>
           </div>
         </button>
 
         <button onclick="switchTab('chat')" class="glass-panel p-4 rounded-xl border border-white/10 hover:border-indigo-400/50 text-left transition flex items-center space-x-3 group">
           <div class="w-10 h-10 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
-            <i data-lucide="message-square" class="w-5 h-5"></i>
+            <i data-lucide="mic" class="w-5 h-5"></i>
           </div>
           <div>
-            <h4 class="text-xs font-bold text-white group-hover:text-indigo-300 transition">Chat en Streaming</h4>
-            <p class="text-[11px] text-slate-400">Respuestas rápidas palabra por palabra</p>
+            <h4 class="text-xs font-bold text-white group-hover:text-indigo-300 transition">Chat con Voz en Vivo</h4>
+            <p class="text-[11px] text-slate-400">Habla con tu IA en español</p>
           </div>
         </button>
 
-        <button onclick="switchTab('catalog')" class="glass-panel p-4 rounded-xl border border-white/10 hover:border-purple-400/50 text-left transition flex items-center space-x-3 group">
-          <div class="w-10 h-10 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
-            <i data-lucide="box" class="w-5 h-5"></i>
+        <button onclick="switchTab('diagrams')" class="glass-panel p-4 rounded-xl border border-white/10 hover:border-amber-400/50 text-left transition flex items-center space-x-3 group">
+          <div class="w-10 h-10 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
+            <i data-lucide="git-branch" class="w-5 h-5"></i>
           </div>
           <div>
-            <h4 class="text-xs font-bold text-white group-hover:text-purple-300 transition">Ver los 20 Modelos</h4>
-            <p class="text-[11px] text-slate-400">Los 20 modelos locales listos para usar</p>
+            <h4 class="text-xs font-bold text-white group-hover:text-amber-300 transition">Diagramas de Estrategia</h4>
+            <p class="text-[11px] text-slate-400">Rutas autónomas de robótica</p>
+          </div>
+        </button>
+
+        <button onclick="openQRModal()" class="glass-panel p-4 rounded-xl border border-white/10 hover:border-purple-400/50 text-left transition flex items-center space-x-3 group">
+          <div class="w-10 h-10 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
+            <i data-lucide="smartphone" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h4 class="text-xs font-bold text-white group-hover:text-purple-300 transition">Acceso Móvil QR</h4>
+            <p class="text-[11px] text-slate-400">Controla desde tu teléfono</p>
           </div>
         </button>
       </div>
 
-      <!-- TIER 3 DETAILED EXPANSION: ALL 20 CURATED MODELS DIRECTLY IN THE MAP -->
+      <!-- TIER 3 DETAILED EXPANSION: ALL 20 CURATED MODELS -->
       <div class="glass-panel p-6 rounded-2xl border border-white/10 space-y-4">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/10 pb-3">
           <div class="flex items-center space-x-2">
             <span class="text-xs font-bold px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 font-mono">TIER 3 EXPANDIDO</span>
             <h3 class="text-base font-bold text-white">Los 20 Modelos de tu Ecosistema Local</h3>
           </div>
-          <span class="text-xs text-slate-400">Haz clic en <strong>Descargar</strong> en cualquiera que necesites</span>
+          <span class="text-xs text-slate-400">Listos para instalar o alternar</span>
         </div>
-
-        <!-- 20 Models Dynamic Showcase Grid -->
-        <div id="tier3-20-models-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-          <!-- Populated by app.js with all 20 models -->
-        </div>
+        <div id="tier3-20-models-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3"></div>
       </div>
     </div>
 
@@ -247,7 +274,7 @@
             <span class="text-[10px] px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 font-mono">FTC Java</span>
           </div>
           <h4 class="text-sm font-bold text-white group-hover:text-cyan-300 transition">Autonomous OpMode</h4>
-          <p class="text-xs text-slate-400">Autónomo con chasis Mecanum, detección AprilTag, encoders y timers.</p>
+          <p class="text-xs text-slate-400">Autónomo con chasis Mecanum, AprilTags y encoders.</p>
         </button>
 
         <button onclick="loadFTCTemplate('teleop')" class="glass-panel p-4 rounded-xl border border-white/10 hover:border-indigo-500/40 text-left transition space-y-2 group">
@@ -265,7 +292,7 @@
             <span class="text-[10px] px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 font-mono">RobotMap</span>
           </div>
           <h4 class="text-sm font-bold text-white group-hover:text-purple-300 transition">HardwareMap & Subsystems</h4>
-          <p class="text-xs text-slate-400">Estructura limpia para definir motores, servos, IMU y sensores.</p>
+          <p class="text-xs text-slate-400">Estructura limpia para definir motores, servos y sensores.</p>
         </button>
       </div>
 
@@ -309,7 +336,7 @@
       </div>
     </div>
 
-    <!-- ================= VIEW 3: CHAT ================= -->
+    <!-- ================= VIEW 3: CHAT CON VOZ & RAG ================= -->
     <div id="view-chat" class="hidden flex flex-col h-[calc(100vh-12rem)] max-h-[850px] glass-panel rounded-2xl border border-white/10 overflow-hidden shadow-2xl">
       <div class="p-4 border-b border-white/10 bg-slate-900/60 flex flex-wrap items-center justify-between gap-3">
         <div class="flex items-center space-x-3">
@@ -320,29 +347,84 @@
           </select>
           <span id="selected-service-badge" class="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-white/10">Ollama</span>
         </div>
-        <button onclick="clearChatHistory()" class="p-1.5 rounded-lg bg-slate-800 hover:bg-rose-900/50 hover:text-rose-300 text-slate-400 transition">
+
+        <!-- RAG Active Badge -->
+        <div id="rag-badge" class="hidden items-center space-x-1.5 px-2.5 py-1 rounded-full bg-cyan-500/10 text-cyan-300 border border-cyan-500/20 text-xs">
+          <i data-lucide="file-check" class="w-3.5 h-3.5"></i>
+          <span id="rag-filename">Manual FTC Cargado</span>
+          <button onclick="clearRAGContext()" class="hover:text-white ml-1">✕</button>
+        </div>
+
+        <button onclick="clearChatHistory()" class="p-1.5 rounded-lg bg-slate-800 hover:bg-rose-900/50 hover:text-rose-300 text-slate-400 transition" title="Limpiar chat">
           <i data-lucide="trash-2" class="w-4 h-4"></i>
         </button>
       </div>
 
       <div id="chat-messages" class="flex-1 p-4 sm:p-6 overflow-y-auto space-y-4">
         <div class="glass-panel p-4 rounded-2xl border-white/10 text-sm leading-relaxed text-slate-200 max-w-3xl">
-          <p class="font-semibold text-white mb-1">¡Chat Multimodelo en Streaming!</p>
-          <p class="text-slate-300">Respuestas rápidas palabra por palabra sin tiempos de espera largos.</p>
+          <p class="font-semibold text-white mb-1">¡Chat Multimodelo con Voz y RAG!</p>
+          <p class="text-slate-300">
+            Puedes hablarle usando el <strong>micrófono</strong>, escuchar sus respuestas con la <strong>voz</strong>, o subir un <strong>PDF/documento</strong> para que lo analice.
+          </p>
         </div>
       </div>
 
+      <!-- Input Bar with Mic & Document Upload -->
       <div class="p-4 border-t border-white/10 bg-slate-900/80">
-        <form onsubmit="handleChatSubmit(event)" class="flex items-center space-x-3">
-          <textarea id="chat-input" rows="1" onkeydown="handleInputKeydown(event)" placeholder="Escribe tu mensaje... (Shift+Enter para salto de línea)" class="w-full glass-input rounded-xl px-4 py-3 text-sm text-white placeholder-slate-500 resize-none"></textarea>
-          <button type="submit" id="btn-send-chat" class="px-5 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-cyan-600 hover:from-indigo-500 hover:to-cyan-500 text-white font-medium text-sm shadow-md transition shrink-0">
+        <form onsubmit="handleChatSubmit(event)" class="flex items-center space-x-2 sm:space-x-3">
+          <!-- Document Upload Button (RAG) -->
+          <label class="p-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white cursor-pointer transition border border-white/10 flex items-center justify-center shrink-0" title="Subir PDF o manual FTC (RAG)">
+            <i data-lucide="paperclip" class="w-4 h-4 text-cyan-400"></i>
+            <input type="file" id="file-upload-input" accept=".txt,.pdf,.java,.py,.json,.md" onchange="handleFileUpload(event)" class="hidden">
+          </label>
+
+          <!-- Voice Mic Button (STT) -->
+          <button type="button" onclick="toggleMicrophone()" id="btn-mic" class="p-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-cyan-300 transition border border-white/10 flex items-center justify-center shrink-0" title="Hablar por micrófono">
+            <i data-lucide="mic" class="w-4 h-4" id="mic-icon"></i>
+          </button>
+
+          <!-- Textarea -->
+          <textarea id="chat-input" rows="1" onkeydown="handleInputKeydown(event)" placeholder="Escribe tu mensaje o habla por el micrófono... (Shift+Enter para salto de línea)" class="w-full glass-input rounded-xl px-4 py-3 text-sm text-white placeholder-slate-500 resize-none"></textarea>
+
+          <!-- Send Button -->
+          <button type="submit" id="btn-send-chat" class="px-5 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-cyan-600 hover:from-indigo-500 hover:to-cyan-500 text-white font-medium text-sm shadow-md transition shrink-0 flex items-center space-x-1">
             <span>Enviar</span>
+            <i data-lucide="send" class="w-3.5 h-3.5"></i>
           </button>
         </form>
       </div>
     </div>
 
-    <!-- ================= VIEW 4: CATALOG ================= -->
+    <!-- ================= VIEW 4: DIAGRAMAS DE ROBÓTICA (MERMAID) ================= -->
+    <div id="view-diagrams" class="hidden space-y-6">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 class="text-xl font-bold text-white flex items-center gap-2">
+            <i data-lucide="git-branch" class="w-5 h-5 text-amber-400"></i>
+            Diagramas Visuales de Estrategia FTC (Mermaid)
+          </h2>
+          <p class="text-sm text-slate-400">Genera diagramas de flujo interactivos para la trayectoria autónoma de tu robot.</p>
+        </div>
+        <button onclick="generateFTCDiagram()" class="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white text-xs font-semibold shadow-md transition flex items-center space-x-1.5">
+          <i data-lucide="sparkles" class="w-4 h-4"></i>
+          <span>Generar Nueva Estrategia</span>
+        </button>
+      </div>
+
+      <!-- Diagram Viewer Panel -->
+      <div class="glass-panel p-6 rounded-2xl border border-white/10 space-y-4">
+        <div class="flex items-center justify-between border-b border-white/10 pb-3">
+          <h3 class="text-sm font-bold text-white" id="diagram-title">Estrategia Autónoma: Mecanum + AprilTag Detection</h3>
+          <span class="text-xs text-amber-400 font-mono">Mermaid.js Engine</span>
+        </div>
+
+        <div id="mermaid-render-container" class="bg-black/60 rounded-xl p-6 min-h-[350px] flex items-center justify-center overflow-auto border border-white/5">
+          <!-- Rendered diagram -->
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= VIEW 5: CATALOG ================= -->
     <div id="view-catalog" class="hidden space-y-6">
       <div class="flex items-center justify-between">
         <div>
@@ -356,10 +438,10 @@
           2.85 GB disponibles del cupo de 5 GB
         </span>
       </div>
-      <div id="catalog-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+      <div id="catalog-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3"></div>
     </div>
 
-    <!-- ================= VIEW 5: RADAR ================= -->
+    <!-- ================= VIEW 6: RADAR ================= -->
     <div id="view-radar" class="hidden space-y-6">
       <div class="flex items-center justify-between">
         <h2 class="text-xl font-bold text-white">Radar de Puertos y Servicios</h2>
@@ -368,6 +450,34 @@
       <div id="services-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
     </div>
   </main>
+
+  <!-- ================= MODAL: CÓDIGO QR PARA CELULAR ================= -->
+  <div id="modal-qr" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+    <div class="glass-panel max-w-sm w-full p-6 rounded-2xl border border-white/15 space-y-4 text-center">
+      <div class="flex items-center justify-between pb-2 border-b border-white/10">
+        <h3 class="text-sm font-bold text-white flex items-center gap-2">
+          <i data-lucide="smartphone" class="w-4 h-4 text-purple-400"></i>
+          <span>Control desde tu Celular</span>
+        </h3>
+        <button onclick="closeQRModal()" class="text-slate-400 hover:text-white">✕</button>
+      </div>
+
+      <p class="text-xs text-slate-300">
+        Conecta tu teléfono al <strong>mismo Wi-Fi</strong> de tu casa y escanea este código para abrir tu ecosistema:
+      </p>
+
+      <!-- QR Container -->
+      <div class="flex justify-center p-4 bg-white rounded-2xl shadow-xl w-fit mx-auto" id="qrcode-box"></div>
+
+      <div class="bg-black/50 p-2.5 rounded-xl border border-white/5 text-[11px] font-mono text-cyan-300 break-all" id="mobile-url-text">
+        Cargando dirección de red...
+      </div>
+
+      <button onclick="closeQRModal()" class="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold">
+        Cerrar
+      </button>
+    </div>
+  </div>
 
   <div id="toast-container" class="fixed bottom-4 right-4 z-50 space-y-2 pointer-events-none"></div>
 
