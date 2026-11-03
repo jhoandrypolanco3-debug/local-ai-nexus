@@ -316,9 +316,9 @@
         <div class="lg:col-span-1 glass-panel p-5 rounded-2xl border border-white/10 space-y-4">
           <h3 class="text-sm font-bold text-white">Instrucción al Agente</h3>
           <select id="agent-model-select" class="w-full glass-input text-xs text-white p-2.5 rounded-lg bg-slate-800">
-            <option value="llama3.2:1b" selected>⚡ llama3.2:1b (Ultra Rápido &lt; 3 segs)</option>
-            <option value="qwen2.5-coder:1.5b">💻 qwen2.5-coder:1.5b (Especialista FTC & Código)</option>
-            <option value="neoia-cloud">☁️ NeoIA Cloud (DeepSeek FTC Expert)</option>
+            <option value="neoia-cloud" selected>☁️ NeoIA Cloud (DeepSeek GPU - Súper Rápido 10-15s)</option>
+            <option value="llama3.2:1b">⚡ llama3.2:1b (Local en tu PC - 100% Offline)</option>
+            <option value="qwen2.5-coder:1.5b">💻 qwen2.5-coder:1.5b (Local en tu PC - FTC Especialista)</option>
           </select>
 
           <!-- Quick Mechanism Builder Pills -->
@@ -359,8 +359,9 @@
           <div id="agent-status-bar" class="hidden p-2.5 mb-3 rounded-lg bg-slate-900 border border-white/5 text-xs flex items-center space-x-2 text-cyan-300">
             <i data-lucide="loader" class="w-3.5 h-3.5 animate-spin"></i>
             <span id="agent-status-text">Procesando código FTC...</span>
+            <span id="agent-timer-badge" class="ml-auto font-mono text-cyan-400 font-bold px-2 py-0.5 rounded bg-cyan-950/60 border border-cyan-500/30">⏱️ 0.0s</span>
           </div>
-          <div id="agent-code-container" class="flex-1 bg-black/60 rounded-xl p-4 overflow-auto font-mono text-xs text-slate-200 border border-white/5">
+          <div id="agent-code-container" class="flex-1 bg-black/60 rounded-xl p-4 overflow-auto font-mono text-xs text-slate-200 border border-white/5 whitespace-pre-wrap">
             <span class="text-slate-500">// El código generado aparecerá aquí...</span>
           </div>
         </div>

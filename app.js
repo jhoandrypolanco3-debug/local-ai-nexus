@@ -458,13 +458,21 @@ async function runAgentTask() {
     return;
   }
 
-  const modelId = modelSelect.value || 'qwen2.5-coder:1.5b';
+  const modelId = modelSelect.value || 'neoia-cloud';
   const targetPath = pathInput.value.trim();
 
   btn.disabled = true;
   statusBar.classList.remove('hidden');
   statusText.innerText = `El agente está procesando tu código FTC con ${modelId}...`;
-  codeBox.innerHTML = '<span class="text-cyan-400">Generando código en tiempo real con tu modelo local...</span>';
+  codeBox.innerHTML = '<span class="text-cyan-400">Generando código en tiempo real...</span>';
+
+  const startTime = Date.now();
+  const timerBadge = document.getElementById('agent-timer-badge');
+  if (timerBadge) timerBadge.innerText = '⏱️ 0.0s';
+  const timerInterval = setInterval(() => {
+    const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+    if (timerBadge) timerBadge.innerText = `⏱️ ${elapsed}s`;
+  }, 100);
 
   try {
     let systemPrompt = `Eres NeoIA, el arquitecto de software y programador senior experto en TODOS los tipos de código para FIRST Tech Challenge (FTC) para el equipo BIOBUZZ 24096.
@@ -551,6 +559,9 @@ Empieza directamente con el código sin rodeos. Nunca digas que fuiste creado po
     }
     showToast(`Error: ${err.message}`, 'error');
   } finally {
+    clearInterval(timerInterval);
+    const finalElapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+    if (timerBadge) timerBadge.innerText = `⏱️ ${finalElapsed}s`;
     btn.disabled = false;
   }
 }
