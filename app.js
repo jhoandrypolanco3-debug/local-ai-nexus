@@ -2,7 +2,7 @@
 // Local AI Nexus & Agente Autónomo Local
 // ==========================================
 
-const IS_HOSTED_SERVER = window.location.origin.includes('localhost:3333') || window.location.origin.includes('127.0.0.1:3333');
+const IS_HOSTED_SERVER = window.location.protocol.startsWith('http');
 
 const DEFAULT_SERVICES = [
   {
