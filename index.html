@@ -323,15 +323,18 @@
 
           <!-- Quick Mechanism Builder Pills -->
           <div class="space-y-1.5">
-            <span class="text-[10px] text-slate-400 font-medium">Añadir mecanismos a tu robot:</span>
+            <div class="flex items-center justify-between">
+              <span class="text-[10px] text-slate-400 font-medium">Añadir mecanismos a tu robot:</span>
+              <button type="button" onclick="clearAgentTask()" class="px-2 py-0.5 rounded bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 text-[10px] border border-rose-500/20 transition">🗑️ Limpiar</button>
+            </div>
             <div class="flex flex-wrap gap-1">
+              <button type="button" onclick="loadShooterIntakeOnly()" class="px-2.5 py-1 rounded bg-amber-500/25 hover:bg-amber-500/40 text-amber-300 font-bold text-[10px] border border-amber-500/40 transition shadow-sm">🎯 Solo Shooter + Intake</button>
               <button type="button" onclick="appendMechanism('chasis Mecanum de 4 motores')" class="px-2 py-1 rounded bg-slate-800 hover:bg-cyan-500/20 text-cyan-300 text-[10px] border border-white/10 transition">+ Mecanum</button>
               <button type="button" onclick="appendMechanism('shooter con control de velocidad por encoder y PID')" class="px-2 py-1 rounded bg-slate-800 hover:bg-amber-500/20 text-amber-300 text-[10px] border border-white/10 transition">+ Shooter PID</button>
-              <button type="button" onclick="appendMechanism('webcam USB con VisionPortal para AprilTags')" class="px-2 py-1 rounded bg-slate-800 hover:bg-purple-500/20 text-purple-300 text-[10px] border border-white/10 transition">+ AprilTags</button>
+              <button type="button" onclick="appendMechanism('intake de recolección')" class="px-2 py-1 rounded bg-slate-800 hover:bg-indigo-500/20 text-indigo-300 text-[10px] border border-white/10 transition">+ Intake</button>
               <button type="button" onclick="appendMechanism('elevador linear slides con RUN_TO_POSITION')" class="px-2 py-1 rounded bg-slate-800 hover:bg-emerald-500/20 text-emerald-300 text-[10px] border border-white/10 transition">+ Elevador</button>
-              <button type="button" onclick="appendMechanism('intake y transfer')" class="px-2 py-1 rounded bg-slate-800 hover:bg-indigo-500/20 text-indigo-300 text-[10px] border border-white/10 transition">+ Intake</button>
-              <button type="button" onclick="appendMechanism('control independiente para 2 gamepads (piloto y operador)')" class="px-2 py-1 rounded bg-slate-800 hover:bg-pink-500/20 text-pink-300 text-[10px] border border-white/10 transition">+ 2 Mandos</button>
-              <button type="button" onclick="appendMechanism('conduccion Field-Centric con IMU interno')" class="px-2 py-1 rounded bg-slate-800 hover:bg-blue-500/20 text-blue-300 text-[10px] border border-white/10 transition">+ IMU</button>
+              <button type="button" onclick="appendMechanism('webcam USB con VisionPortal para AprilTags')" class="px-2 py-1 rounded bg-slate-800 hover:bg-purple-500/20 text-purple-300 text-[10px] border border-white/10 transition">+ AprilTags</button>
+              <button type="button" onclick="appendMechanism('control independiente para 2 gamepads')" class="px-2 py-1 rounded bg-slate-800 hover:bg-pink-500/20 text-pink-300 text-[10px] border border-white/10 transition">+ 2 Mandos</button>
             </div>
           </div>
 

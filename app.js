@@ -443,12 +443,28 @@ function appendMechanism(text) {
   showToast(`Mecanismo añadido: ${text}`, 'info');
 }
 
+function loadShooterIntakeOnly() {
+  const input = document.getElementById('agent-task-input');
+  const path = document.getElementById('agent-filepath-input');
+  if (input) input.value = 'Chasis Mecanum con Shooter (velocidad por encoder PID) e Intake de recolección';
+  if (path) path.value = 'ShooterIntakeTeleOp.java';
+  showToast('🎯 Modo: Solo Shooter + Intake cargado.', 'info');
+  runInstantAgent();
+}
+
+function clearAgentTask() {
+  const input = document.getElementById('agent-task-input');
+  const path = document.getElementById('agent-filepath-input');
+  if (input) input.value = '';
+  if (path) path.value = 'ShooterIntakeTeleOp.java';
+  showToast('Caja limpiada. Escribe o pulsa un botón rápido.', 'info');
+}
+
 function generateInstantFTCCode(taskText) {
   const t = (taskText || '').toLowerCase();
-  const hasMecanum = t.includes('mecanum') || t.includes('chasis') || t.includes('4 motores') || true;
-  const hasShooter = t.includes('shooter') || t.includes('disparador') || t.includes('lanzador');
-  const hasVision = t.includes('vision') || t.includes('apriltag') || t.includes('webcam') || t.includes('camara');
-  const hasIntake = t.includes('intake') || t.includes('recolector') || t.includes('transfer');
+  const hasShooter = t.includes('shooter') || t.includes('disparador') || t.includes('lanzador') || true;
+  const hasIntake = t.includes('intake') || t.includes('recolector') || t.includes('transfer') || true;
+  const hasVision = t.includes('vision') || t.includes('apriltag') || t.includes('webcam');
   const hasElevator = t.includes('elevador') || t.includes('slide') || t.includes('brazo');
 
   let imports = `package org.firstinspires.ftc.teamcode;
@@ -468,19 +484,14 @@ import java.util.List;`;
   }
 
   let vars = `    // 1. Chasis Mecanum (4 Motores)
-    private DcMotorEx leftFront, rightFront, leftBack, rightBack;`;
+    private DcMotorEx leftFront, rightFront, leftBack, rightBack;
 
-  if (hasShooter) {
-    vars += `\n    // 2. Shooter con control de velocidad por Encoder (PID)
+    // 2. Shooter con control de velocidad por Encoder (PID)
     private DcMotorEx shooterMotor;
-    private final double TARGET_SHOOTER_TICKS = 2100.0; // Ticks por segundo objetivo`;
-  }
+    private final double TARGET_SHOOTER_TICKS = 2200.0; // Velocidad objetivo en Ticks/seg
 
-  if (hasIntake) {
-    vars += `\n    // 3. Intake y Transfer
-    private DcMotor intakeMotor;
-    private DcMotor transferMotor;`;
-  }
+    // 3. Intake de recolección
+    private DcMotor intakeMotor;`;
 
   if (hasElevator) {
     vars += `\n    // 4. Elevador / Linear Slides
@@ -509,22 +520,16 @@ import java.util.List;`;
         leftFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         rightFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         leftBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        rightBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);`;
+        rightBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-  if (hasShooter) {
-    inits += `\n\n        // Configuración Shooter con Encoder
+        // Configuración Shooter con Encoder (PID)
         shooterMotor = hardwareMap.get(DcMotorEx.class, "shooterMotor");
         shooterMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        shooterMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);`;
-  }
+        shooterMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
-  if (hasIntake) {
-    inits += `\n\n        // Configuración Intake y Transfer
+        // Configuración Intake
         intakeMotor = hardwareMap.get(DcMotor.class, "intakeMotor");
-        transferMotor = hardwareMap.get(DcMotor.class, "transferMotor");
-        intakeMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        transferMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);`;
-  }
+        intakeMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);`;
 
   if (hasElevator) {
     inits += `\n\n        // Configuración Elevador
@@ -556,7 +561,7 @@ import java.util.List;`;
             double rx = gamepad1.right_stick_x;
 
             double speedMultiplier = gamepad1.right_trigger > 0.2 ? 1.0 : 0.75;
-            if (gamepad1.left_trigger > 0.2) speedMultiplier = 0.4;
+            if (gamepad1.left_trigger > 0.2) speedMultiplier = 0.4; // Modo precisión
 
             double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1.0);
             leftFront.setPower(((y + x + rx) / denominator) * speedMultiplier);
@@ -565,36 +570,28 @@ import java.util.List;`;
             rightBack.setPower(((y + x - rx) / denominator) * speedMultiplier);
 
             // ==========================================
-            // 🎮 GAMEPAD 2: OPERADOR (Mecanismos)
-            // ==========================================`;
-
-  if (hasShooter) {
-    loopBody += `\n            // Control Shooter PID
+            // 🎮 GAMEPAD 2: OPERADOR (Shooter & Intake)
+            // ==========================================
+            // 🎯 Control Shooter: Gatillo derecho para disparar a velocidad PID
             if (gamepad2.right_trigger > 0.2) {
                 shooterMotor.setVelocity(TARGET_SHOOTER_TICKS);
             } else if (gamepad2.right_bumper) {
-                shooterMotor.setVelocity(TARGET_SHOOTER_TICKS * 0.75);
+                shooterMotor.setVelocity(TARGET_SHOOTER_TICKS * 0.7); // Tiro medio
             } else {
-                shooterMotor.setVelocity(0);
-            }`;
-  }
+                shooterMotor.setVelocity(0.0);
+            }
 
-  if (hasIntake) {
-    loopBody += `\n            // Control Intake y Transfer
+            // 🌀 Control Intake: Botón A para tragar, Botón B para expulsar
             if (gamepad2.a) {
-                intakeMotor.setPower(1.0);
-                transferMotor.setPower(0.8);
+                intakeMotor.setPower(1.0); // Tragar piezas
             } else if (gamepad2.b) {
-                intakeMotor.setPower(-1.0);
-                transferMotor.setPower(-0.8);
+                intakeMotor.setPower(-1.0); // Reversa / Expulsar
             } else {
                 intakeMotor.setPower(0.0);
-                transferMotor.setPower(0.0);
             }`;
-  }
 
   if (hasElevator) {
-    loopBody += `\n            // Control Elevador
+    loopBody += `\n\n            // Control Elevador
             if (gamepad2.dpad_up) {
                 liftMotor.setTargetPosition(LIFT_HIGH_POS);
                 liftMotor.setPower(1.0);
@@ -605,7 +602,7 @@ import java.util.List;`;
   }
 
   if (hasVision) {
-    loopBody += `\n            // Telemetría AprilTags
+    loopBody += `\n\n            // Telemetría AprilTags
             if (aprilTag != null) {
                 List<AprilTagDetection> detections = aprilTag.getDetections();
                 telemetry.addData("Tags Detectados", detections.size());
@@ -615,12 +612,12 @@ import java.util.List;`;
   return `${imports}
 
 /**
- * ⚡ NeoIA Instant FTC Master
+ * 🎯 TeleOp Especializado: Shooter PID + Intake
  * Temporada Oficial: BIOBUZZ 24096
- * Generado en 0.05 segundos listo para Android Studio
+ * Generado en 0.05 segundos listo para Android Studio / TeamCode
  */
-@TeleOp(name = "TeleOp BioBuzz Master", group = "BIOBUZZ")
-public class TeleOpBioBuzzMaster extends LinearOpMode {
+@TeleOp(name = "Shooter & Intake TeleOp", group = "BIOBUZZ")
+public class ShooterIntakeTeleOp extends LinearOpMode {
 
 ${vars}
 
@@ -628,7 +625,7 @@ ${vars}
     public void runOpMode() {
 ${inits}
 
-        telemetry.addData("Estado", "Robot BIOBUZZ 24096 Listo para Iniciar!");
+        telemetry.addData("Robot", "BIOBUZZ 24096 Listo con Shooter & Intake!");
         telemetry.update();
 
         waitForStart();
@@ -636,7 +633,8 @@ ${inits}
         while (opModeIsActive()) {
 ${loopBody}
 
-            telemetry.addData("Status", "En ejecucion normal");
+            telemetry.addData("Shooter Vel (Ticks/s)", shooterMotor.getVelocity());
+            telemetry.addData("Intake Potencia", intakeMotor.getPower());
             telemetry.update();
         }
 
@@ -654,8 +652,8 @@ async function runInstantAgent() {
   const codeBox = document.getElementById('agent-code-container');
   const timerBadge = document.getElementById('agent-timer-badge');
 
-  const task = taskInput.value.trim() || 'Mecanum con shooter, intake, transfer y vision';
-  const targetPath = pathInput.value.trim() || 'TeleOpBioBuzzMaster.java';
+  const task = taskInput.value.trim() || 'Chasis Mecanum con Shooter e Intake';
+  const targetPath = pathInput.value.trim() || 'ShooterIntakeTeleOp.java';
 
   statusBar.classList.remove('hidden');
   if (timerBadge) timerBadge.innerText = '⏱️ 0.05s';
