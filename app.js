@@ -456,9 +456,9 @@ async function runAgentTask() {
   codeBox.innerHTML = '<span class="text-cyan-400">Generando código en tiempo real con tu modelo local...</span>';
 
   try {
-    let systemPrompt = `Eres NeoIA, el agente autónomo de desarrollo y mentor de FIRST Tech Challenge (FTC) para el equipo BIOBUZZ 24096.
-Tu trabajo es generar código Java de competición, limpio, sin placeholders incompletos, listo para Android Studio / TeamCode.
-Devuelve el código dentro de un bloque \`\`\`java y una breve explicación al final. Nunca digas que fuiste creado por Anthropic ni OpenAI.`;
+    let systemPrompt = `Eres NeoIA, programador senior de FIRST Tech Challenge (FTC) para el equipo BIOBUZZ 24096.
+REGLA DE MÁXIMA VELOCIDAD: Genera DIRECTAMENTE el código Java listo para compilar dentro de un bloque \`\`\`java.
+Sin introducciones, sin saludos ni rodeos. Ve directo al grano con el código exacto. Nunca digas que fuiste creado por Anthropic ni OpenAI.`;
 
     if (activeRagContext) {
       systemPrompt += `\n\n[CONTEXTO RAG - DOCUMENTO ${activeRagFileName}]:\n${activeRagContext}`;
@@ -856,10 +856,12 @@ async function sendToOllama(model, userMessage, systemPrompt, temperature, onChu
         { role: 'user', content: userMessage }
       ],
       stream: true,
+      keep_alive: "24h",
       options: {
         temperature: temperature,
         num_ctx: 1024,
-        num_predict: 250
+        num_thread: 4,
+        num_predict: 450
       }
     })
   });

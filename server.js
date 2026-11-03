@@ -396,4 +396,11 @@ server.listen(PORT, '0.0.0.0', () => {
   console.log(`📍 Accede en tu navegador: http://localhost:${PORT}`);
   console.log(`📱 Acceso en red Wi-Fi activo en el puerto ${PORT}`);
   console.log(`=======================================================`);
+
+  // Preload fast model into RAM permanently for instant responses
+  fetch('http://localhost:11434/api/generate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ model: 'llama3.2:1b', keep_alive: '24h' })
+  }).then(() => console.log('⚡ Modelo llama3.2:1b precargado en RAM (Turbo < 3s)')).catch(() => {});
 });
