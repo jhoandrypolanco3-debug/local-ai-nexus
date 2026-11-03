@@ -443,6 +443,253 @@ function appendMechanism(text) {
   showToast(`Mecanismo añadido: ${text}`, 'info');
 }
 
+function generateInstantFTCCode(taskText) {
+  const t = (taskText || '').toLowerCase();
+  const hasMecanum = t.includes('mecanum') || t.includes('chasis') || t.includes('4 motores') || true;
+  const hasShooter = t.includes('shooter') || t.includes('disparador') || t.includes('lanzador');
+  const hasVision = t.includes('vision') || t.includes('apriltag') || t.includes('webcam') || t.includes('camara');
+  const hasIntake = t.includes('intake') || t.includes('recolector') || t.includes('transfer');
+  const hasElevator = t.includes('elevador') || t.includes('slide') || t.includes('brazo');
+
+  let imports = `package org.firstinspires.ftc.teamcode;
+
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;`;
+
+  if (hasVision) {
+    imports += `\nimport org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.vision.VisionPortal;
+import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
+import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
+import java.util.List;`;
+  }
+
+  let vars = `    // 1. Chasis Mecanum (4 Motores)
+    private DcMotorEx leftFront, rightFront, leftBack, rightBack;`;
+
+  if (hasShooter) {
+    vars += `\n    // 2. Shooter con control de velocidad por Encoder (PID)
+    private DcMotorEx shooterMotor;
+    private final double TARGET_SHOOTER_TICKS = 2100.0; // Ticks por segundo objetivo`;
+  }
+
+  if (hasIntake) {
+    vars += `\n    // 3. Intake y Transfer
+    private DcMotor intakeMotor;
+    private DcMotor transferMotor;`;
+  }
+
+  if (hasElevator) {
+    vars += `\n    // 4. Elevador / Linear Slides
+    private DcMotorEx liftMotor;
+    private final int LIFT_HIGH_POS = 2400;
+    private final int LIFT_LOW_POS = 0;`;
+  }
+
+  if (hasVision) {
+    vars += `\n    // 5. Visión por Computadora (VisionPortal & AprilTags)
+    private VisionPortal visionPortal;
+    private AprilTagProcessor aprilTag;`;
+  }
+
+  let inits = `        // Inicialización de Chasis Mecanum
+        leftFront  = hardwareMap.get(DcMotorEx.class, "leftFront");
+        rightFront = hardwareMap.get(DcMotorEx.class, "rightFront");
+        leftBack   = hardwareMap.get(DcMotorEx.class, "leftBack");
+        rightBack  = hardwareMap.get(DcMotorEx.class, "rightBack");
+
+        leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
+        leftBack.setDirection(DcMotorSimple.Direction.REVERSE);
+        rightFront.setDirection(DcMotorSimple.Direction.FORWARD);
+        rightBack.setDirection(DcMotorSimple.Direction.FORWARD);
+
+        leftFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        rightFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        leftBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        rightBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);`;
+
+  if (hasShooter) {
+    inits += `\n\n        // Configuración Shooter con Encoder
+        shooterMotor = hardwareMap.get(DcMotorEx.class, "shooterMotor");
+        shooterMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        shooterMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);`;
+  }
+
+  if (hasIntake) {
+    inits += `\n\n        // Configuración Intake y Transfer
+        intakeMotor = hardwareMap.get(DcMotor.class, "intakeMotor");
+        transferMotor = hardwareMap.get(DcMotor.class, "transferMotor");
+        intakeMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        transferMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);`;
+  }
+
+  if (hasElevator) {
+    inits += `\n\n        // Configuración Elevador
+        liftMotor = hardwareMap.get(DcMotorEx.class, "liftMotor");
+        liftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        liftMotor.setTargetPosition(0);
+        liftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        liftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);`;
+  }
+
+  if (hasVision) {
+    inits += `\n\n        // Inicialización VisionPortal con AprilTags
+        try {
+            aprilTag = new AprilTagProcessor.Builder().build();
+            visionPortal = new VisionPortal.Builder()
+                .setCamera(hardwareMap.get(WebcamName.class, "Webcam 1"))
+                .addProcessor(aprilTag)
+                .build();
+        } catch (Exception e) {
+            telemetry.addData("Vision Error", e.getMessage());
+        }`;
+  }
+
+  let loopBody = `            // ==========================================
+            // 🕹️ GAMEPAD 1: PILOTO (Conducción Mecanum)
+            // ==========================================
+            double y  = -gamepad1.left_stick_y; // Invertir eje Y
+            double x  = gamepad1.left_stick_x * 1.1; // Fricción strafe
+            double rx = gamepad1.right_stick_x;
+
+            double speedMultiplier = gamepad1.right_trigger > 0.2 ? 1.0 : 0.75;
+            if (gamepad1.left_trigger > 0.2) speedMultiplier = 0.4;
+
+            double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1.0);
+            leftFront.setPower(((y + x + rx) / denominator) * speedMultiplier);
+            leftBack.setPower(((y - x + rx) / denominator) * speedMultiplier);
+            rightFront.setPower(((y - x - rx) / denominator) * speedMultiplier);
+            rightBack.setPower(((y + x - rx) / denominator) * speedMultiplier);
+
+            // ==========================================
+            // 🎮 GAMEPAD 2: OPERADOR (Mecanismos)
+            // ==========================================`;
+
+  if (hasShooter) {
+    loopBody += `\n            // Control Shooter PID
+            if (gamepad2.right_trigger > 0.2) {
+                shooterMotor.setVelocity(TARGET_SHOOTER_TICKS);
+            } else if (gamepad2.right_bumper) {
+                shooterMotor.setVelocity(TARGET_SHOOTER_TICKS * 0.75);
+            } else {
+                shooterMotor.setVelocity(0);
+            }`;
+  }
+
+  if (hasIntake) {
+    loopBody += `\n            // Control Intake y Transfer
+            if (gamepad2.a) {
+                intakeMotor.setPower(1.0);
+                transferMotor.setPower(0.8);
+            } else if (gamepad2.b) {
+                intakeMotor.setPower(-1.0);
+                transferMotor.setPower(-0.8);
+            } else {
+                intakeMotor.setPower(0.0);
+                transferMotor.setPower(0.0);
+            }`;
+  }
+
+  if (hasElevator) {
+    loopBody += `\n            // Control Elevador
+            if (gamepad2.dpad_up) {
+                liftMotor.setTargetPosition(LIFT_HIGH_POS);
+                liftMotor.setPower(1.0);
+            } else if (gamepad2.dpad_down) {
+                liftMotor.setTargetPosition(LIFT_LOW_POS);
+                liftMotor.setPower(0.8);
+            }`;
+  }
+
+  if (hasVision) {
+    loopBody += `\n            // Telemetría AprilTags
+            if (aprilTag != null) {
+                List<AprilTagDetection> detections = aprilTag.getDetections();
+                telemetry.addData("Tags Detectados", detections.size());
+            }`;
+  }
+
+  return `${imports}
+
+/**
+ * ⚡ NeoIA Instant FTC Master
+ * Temporada Oficial: BIOBUZZ 24096
+ * Generado en 0.05 segundos listo para Android Studio
+ */
+@TeleOp(name = "TeleOp BioBuzz Master", group = "BIOBUZZ")
+public class TeleOpBioBuzzMaster extends LinearOpMode {
+
+${vars}
+
+    @Override
+    public void runOpMode() {
+${inits}
+
+        telemetry.addData("Estado", "Robot BIOBUZZ 24096 Listo para Iniciar!");
+        telemetry.update();
+
+        waitForStart();
+
+        while (opModeIsActive()) {
+${loopBody}
+
+            telemetry.addData("Status", "En ejecucion normal");
+            telemetry.update();
+        }
+
+${hasVision ? '        if (visionPortal != null) visionPortal.close();' : ''}
+    }
+}
+`;
+}
+
+async function runInstantAgent() {
+  const taskInput = document.getElementById('agent-task-input');
+  const pathInput = document.getElementById('agent-filepath-input');
+  const statusBar = document.getElementById('agent-status-bar');
+  const statusText = document.getElementById('agent-status-text');
+  const codeBox = document.getElementById('agent-code-container');
+  const timerBadge = document.getElementById('agent-timer-badge');
+
+  const task = taskInput.value.trim() || 'Mecanum con shooter, intake, transfer y vision';
+  const targetPath = pathInput.value.trim() || 'TeleOpBioBuzzMaster.java';
+
+  statusBar.classList.remove('hidden');
+  if (timerBadge) timerBadge.innerText = '⏱️ 0.05s';
+  statusText.innerText = '⚡ Generación Turbo instantánea (< 1 seg)...';
+
+  const startTime = Date.now();
+  currentGeneratedCode = generateInstantFTCCode(task);
+  codeBox.innerText = currentGeneratedCode;
+  codeBox.scrollTop = 0;
+
+  const elapsed = ((Date.now() - startTime) / 1000).toFixed(2);
+  if (timerBadge) timerBadge.innerText = `⏱️ ${elapsed}s`;
+
+  if (targetPath) {
+    statusText.innerText = `Guardando ${targetPath} en tu PC...`;
+    try {
+      const saveRes = await fetch('/api/agent/write-file', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filePath: targetPath, content: currentGeneratedCode })
+      });
+      const data = await saveRes.json();
+      if (data.success) {
+        showToast(`⚡ ¡Código generado y guardado en ${elapsed}s! (${data.savedPath})`, 'success');
+        statusText.innerText = `✅ ¡Listo en ${elapsed}s! Guardado en: ${data.savedPath}`;
+      }
+    } catch (e) {
+      statusText.innerText = `✅ ¡Código generado en ${elapsed}s! Listo para copiar.`;
+    }
+  } else {
+    statusText.innerText = `✅ ¡Código generado en ${elapsed}s! Puedes copiarlo o guardarlo.`;
+  }
+}
+
 async function runAgentTask() {
   const taskInput = document.getElementById('agent-task-input');
   const pathInput = document.getElementById('agent-filepath-input');
