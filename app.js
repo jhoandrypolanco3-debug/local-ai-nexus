@@ -17,6 +17,17 @@ const DEFAULT_SERVICES = [
     description: 'Motor local de LLMs y Agentes'
   },
   {
+    id: 'neoiacloud',
+    name: 'NeoIA Cloud (Render)',
+    type: 'cloud',
+    url: 'https://neoia-351a.onrender.com',
+    proxyUrl: 'https://neoia-351a.onrender.com',
+    pingEndpoint: '/',
+    icon: '☁️',
+    port: 443,
+    description: 'Servicio en la Nube oficial con DeepSeek para FTC'
+  },
+  {
     id: 'lmstudio',
     name: 'LM Studio',
     type: 'llm',
@@ -446,12 +457,24 @@ Devuelve el código dentro de un bloque \`\`\`java y una breve explicación al f
     }
 
     let accumulatedCode = '';
-    const res = await sendToOllama(modelId, task, systemPrompt, 0.2, (chunk) => {
-      accumulatedCode = chunk;
+    if (modelId === 'neoia-cloud') {
+      statusText.innerText = 'Consultando a NeoIA Cloud (DeepSeek en Render)...';
+      const cloudRes = await fetch('/api/cloud-chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: task })
+      });
+      const cloudData = await cloudRes.json();
+      accumulatedCode = cloudData.reply || cloudData.error || '';
       codeBox.innerText = accumulatedCode;
-    });
+    } else {
+      const res = await sendToOllama(modelId, task, systemPrompt, 0.2, (chunk) => {
+        accumulatedCode = chunk;
+        codeBox.innerText = accumulatedCode;
+      });
+    }
 
-    currentGeneratedCode = res;
+    currentGeneratedCode = accumulatedCode;
     codeBox.innerText = currentGeneratedCode;
 
     if (targetPath) {
@@ -771,10 +794,22 @@ async function handleChatSubmit(e) {
     }
 
     let fullAnswer = '';
-    await sendToOllama(modelId, text, systemPrompt, 0.7, (partial) => {
-      fullAnswer = partial;
-      updateChatMessage(botMsgId, partial);
-    });
+    if (modelId === 'neoia-cloud') {
+      updateChatMessage(botMsgId, 'Conectando con **NeoIA Cloud** (DeepSeek en Render)... ☁️');
+      const cloudRes = await fetch('/api/cloud-chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text })
+      });
+      const cloudData = await cloudRes.json();
+      fullAnswer = cloudData.reply || cloudData.error || 'Sin respuesta del servidor en la nube.';
+      updateChatMessage(botMsgId, fullAnswer);
+    } else {
+      await sendToOllama(modelId, text, systemPrompt, 0.7, (partial) => {
+        fullAnswer = partial;
+        updateChatMessage(botMsgId, partial);
+      });
+    }
 
     // Speak out loud if voice is enabled!
     if (ttsEnabled) {

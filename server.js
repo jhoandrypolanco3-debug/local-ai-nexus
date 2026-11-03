@@ -95,12 +95,39 @@ const server = http.createServer(async (req, res) => {
   if (pathname === '/api/health') {
     const results = {};
     results.ollama = await checkService('ollama', TARGET_SERVICES.ollama, '/api/tags');
+    results.neoiacloud = await checkService('neoiacloud', 'https://neoia-351a.onrender.com', '/');
+    if (results.neoiacloud.online) {
+      results.neoiacloud.models = ['DeepSeek FTC Expert', 'NeoIA Cloud Engine'];
+    }
     results.lmstudio = await checkService('lmstudio', TARGET_SERVICES.lmstudio, '/v1/models');
     results.sdwebui = await checkService('sdwebui', TARGET_SERVICES.sdwebui, '/sdapi/v1/options');
     results.comfyui = await checkService('comfyui', TARGET_SERVICES.comfyui, '/system_stats');
 
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify(results));
+    return;
+  }
+
+  // 1.0. Hybrid Cloud Bridge: Proxy to NeoIA Cloud on Render
+  if (pathname === '/api/cloud-chat' && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', async () => {
+      try {
+        const payload = JSON.parse(body);
+        const cloudRes = await fetch('https://neoia-351a.onrender.com/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const cloudData = await cloudRes.json();
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(cloudData));
+      } catch (err) {
+        res.writeHead(502, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'No se pudo conectar con NeoIA Cloud: ' + err.message }));
+      }
+    });
     return;
   }
 

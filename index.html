@@ -317,6 +317,7 @@
           <h3 class="text-sm font-bold text-white">Instrucción al Agente</h3>
           <select id="agent-model-select" class="w-full glass-input text-xs text-white p-2.5 rounded-lg bg-slate-800">
             <option value="qwen2.5-coder:1.5b" selected>💻 qwen2.5-coder:1.5b (Especialista FTC & Código)</option>
+            <option value="neoia-cloud">☁️ NeoIA Cloud (DeepSeek FTC Expert)</option>
             <option value="llama3.2:1b">⚡ llama3.2:1b (General Rápido)</option>
           </select>
           <textarea id="agent-task-input" rows="4" placeholder="Describe lo que debe programar tu agente..." class="w-full glass-input text-xs text-white p-3 rounded-lg resize-none"></textarea>
@@ -359,6 +360,7 @@
           <select id="chat-model-select" onchange="onModelChange()" class="glass-input text-xs font-medium text-white px-3 py-1.5 rounded-lg bg-slate-800">
             <option value="llama3.2:1b">⚡ llama3.2:1b (General Rápido - 1.3 GB)</option>
             <option value="qwen2.5-coder:1.5b">💻 qwen2.5-coder:1.5b (Programador FTC - 986 MB)</option>
+            <option value="neoia-cloud">☁️ NeoIA Cloud (DeepSeek FTC Expert)</option>
           </select>
           <span id="selected-service-badge" class="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-white/10">Ollama</span>
         </div>
