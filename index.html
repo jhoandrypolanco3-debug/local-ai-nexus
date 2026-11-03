@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Local AI Nexus - Ecosistema de 5 Capas (5-Tier AI Architecture)</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Marked.js para Markdown -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="styles.css">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+            },
+            dark: {
+              950: '#070a12',
+              900: '#0d1222',
+              800: '#141c33',
+              700: '#1e294b'
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-dark-950 text-slate-100 min-h-screen flex flex-col antialiased selection:bg-indigo-500 selection:text-white">
+
+  <!-- Top Navigation Bar -->
+  <header class="border-b border-white/10 glass-panel sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-purple-600 to-cyan-400 flex items-center justify-center shadow-lg shadow-indigo-500/30">
+          <i data-lucide="layers" class="w-6 h-6 text-white"></i>
+        </div>
+        <div>
+          <div class="flex items-center space-x-2">
+            <h1 class="text-lg font-bold tracking-tight bg-gradient-to-r from-white via-slate-100 to-indigo-300 bg-clip-text text-transparent">
+              Local AI Nexus — Arquitectura de 5 Capas
+            </h1>
+            <span class="text-[10px] px-2 py-0.5 rounded-full font-semibold uppercase tracking-wider bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+              5-Tier Local AI
+            </span>
+          </div>
+          <p class="text-xs text-slate-400">Panel Central de Orquestación, Robótica FTC y Agente de PC</p>
+        </div>
+      </div>
+
+      <!-- Quick Status Badges -->
+      <div class="hidden md:flex items-center space-x-3">
+        <!-- 5 GB Storage Guard -->
+        <div id="storage-guard-widget" class="flex items-center space-x-2 px-3 py-1.5 rounded-full bg-slate-900/90 border border-white/10 text-xs shadow-inner">
+          <i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-400"></i>
+          <span>Cuota: <strong id="storage-used-text" class="text-white">2.15</strong> / 5.0 GB</span>
+          <div class="w-16 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+            <div id="storage-progress-bar" class="h-full bg-emerald-500 rounded-full transition-all duration-500" style="width: 43%;"></div>
+          </div>
+        </div>
+
+        <div id="header-status-summary" class="flex items-center space-x-2 px-3 py-1.5 rounded-full bg-slate-900/90 border border-white/10 text-xs">
+          <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 pulse-online" id="status-indicator-dot"></span>
+          <span class="text-slate-300 font-medium" id="status-indicator-text">Ollama En Línea (23 ms)</span>
+        </div>
+
+        <button id="btn-refresh-all" onclick="scanAllServices()" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition flex items-center space-x-1 text-xs border border-white/10" title="Reescanear conexiones">
+          <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex space-x-2 overflow-x-auto scrollbar-none border-t border-white/5">
+      <button onclick="switchTab('map')" id="tab-map" class="tab-btn active px-4 py-3 text-sm font-medium border-b-2 border-cyan-400 text-cyan-300 flex items-center space-x-2 transition">
+        <i data-lucide="workflow" class="w-4 h-4 text-cyan-400"></i>
+        <span>Mapa del Ecosistema (5 Tiers)</span>
+      </button>
+
+      <button onclick="switchTab('agent')" id="tab-agent" class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center space-x-2 transition">
+        <i data-lucide="cpu" class="w-4 h-4 text-emerald-400"></i>
+        <span>🤖 Agente Autónomo (PC & FTC)</span>
+      </button>
+
+      <button onclick="switchTab('chat')" id="tab-chat" class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center space-x-2 transition">
+        <i data-lucide="message-square" class="w-4 h-4"></i>
+        <span>Chat Multimodelo</span>
+      </button>
+
+      <button onclick="switchTab('catalog')" id="tab-catalog" class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center space-x-2 transition">
+        <i data-lucide="box" class="w-4 h-4 text-purple-400"></i>
+        <span>📚 Catálogo de 20 Modelos</span>
+      </button>
+
+      <button onclick="switchTab('radar')" id="tab-radar" class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center space-x-2 transition">
+        <i data-lucide="radar" class="w-4 h-4"></i>
+        <span>Radar de Puertos</span>
+        <span id="active-services-count" class="ml-1 text-[11px] px-1.5 py-0.2 rounded-full bg-indigo-500/20 text-indigo-300">1</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Content Body -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
+
+    <!-- ================= VIEW 1: MAPA DEL ECOSISTEMA (5 TIERS) ================= -->
+    <div id="view-map" class="space-y-6">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 class="text-xl font-bold text-white flex items-center gap-2">
+            <i data-lucide="network" class="w-5 h-5 text-cyan-400"></i>
+            Ecosistema de IA Local — Arquitectura de 5 Capas
+          </h2>
+          <p class="text-sm text-slate-400">
+            Diagrama interactivo de tu ecosistema. Haz clic en cualquier capa o componente para interactuar con él.
+          </p>
+        </div>
+        <div class="flex items-center space-x-2">
+          <span class="text-xs px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 font-mono flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 pulse-online"></span>
+            Flujo de Datos Activo
+          </span>
+        </div>
+      </div>
+
+      <!-- EXACT 3D ISOMETRIC INFOGRAPHIC HERO WITH INTERACTIVE HOTSPOTS -->
+      <div class="infographic-frame relative">
+        <img src="architecture.png" alt="Arquitectura del Ecosistema Local de 5 Capas" class="w-full h-auto object-cover select-none">
+
+        <!-- Tier 1 Hotspot (Top left / UI) -->
+        <div onclick="switchTab('chat')" class="tier-hotspot top-[6%] left-[2%] w-[45%] h-[24%]" title="Tier 1: Client & UI - Haz clic para abrir el Chat">
+          <div class="absolute top-2 left-2 px-2.5 py-1 rounded bg-cyan-950/80 text-cyan-300 font-mono text-[10px] border border-cyan-400/40 flex items-center gap-1.5 shadow-lg backdrop-blur-sm">
+            <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 pulse-online"></span>
+            <span>TIER 1: CLIENT & UI (Clic para abrir)</span>
+          </div>
+        </div>
+
+        <!-- Tier 2 Hotspot (Middle-left / Gateway & LiteLLM Proxy) -->
+        <div onclick="switchTab('radar')" class="tier-hotspot top-[28%] left-[2%] w-[48%] h-[18%]" title="Tier 2: Gateway & Routing (Puerto 3333) - Haz clic para ver el Radar">
+          <div class="absolute top-2 left-2 px-2.5 py-1 rounded bg-indigo-950/80 text-indigo-300 font-mono text-[10px] border border-indigo-400/40 flex items-center gap-1.5 shadow-lg backdrop-blur-sm">
+            <span class="w-1.5 h-1.5 rounded-full bg-indigo-400"></span>
+            <span>TIER 2: GATEWAY & ROUTING (Proxy 3333)</span>
+          </div>
+        </div>
+
+        <!-- Tier 3 Hotspot (Center / Specialized Models) -->
+        <div onclick="switchTab('agent')" class="tier-hotspot top-[44%] left-[2%] w-[70%] h-[25%]" title="Tier 3: Specialized Models - Haz clic para el Agente FTC">
+          <div class="absolute top-2 left-2 px-2.5 py-1 rounded bg-purple-950/80 text-purple-300 font-mono text-[10px] border border-purple-400/40 flex items-center gap-1.5 shadow-lg backdrop-blur-sm">
+            <span class="w-1.5 h-1.5 rounded-full bg-purple-400 pulse-online"></span>
+            <span>TIER 3: SPECIALIZED MODELS (FTC Coder & Llama)</span>
+          </div>
+        </div>
+
+        <!-- Tier 4 Hotspot (Bottom-left / Vector Store & Memory) -->
+        <div onclick="switchTab('agent')" class="tier-hotspot top-[68%] left-[2%] w-[45%] h-[28%]" title="Tier 4: Vector Store & Memory - Base de Conocimiento FTC">
+          <div class="absolute bottom-3 left-3 px-2.5 py-1 rounded bg-amber-950/80 text-amber-300 font-mono text-[10px] border border-amber-400/40 flex items-center gap-1.5 shadow-lg backdrop-blur-sm">
+            <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+            <span>TIER 4: VECTOR STORE & MEMORY (Memoria FTC)</span>
+          </div>
+        </div>
+
+        <!-- Tier 5 Hotspot (Bottom-right / Compute Hardware) -->
+        <div onclick="switchTab('radar')" class="tier-hotspot top-[56%] right-[2%] w-[50%] h-[40%]" title="Tier 5: Compute Hardware - Motor Ollama en tu PC">
+          <div class="absolute bottom-3 right-3 px-2.5 py-1 rounded bg-emerald-950/80 text-emerald-300 font-mono text-[10px] border border-emerald-400/40 flex items-center gap-1.5 shadow-lg backdrop-blur-sm">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 pulse-online"></span>
+            <span>TIER 5: COMPUTE HARDWARE (Ollama 11434 & GPU)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Interactive Action Bar Below Infographic -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+        <button onclick="switchTab('agent')" class="glass-panel p-4 rounded-xl border border-white/10 hover:border-cyan-400/50 text-left transition flex items-center space-x-3 group">
+          <div class="w-10 h-10 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400">
+            <i data-lucide="bot" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h4 class="text-xs font-bold text-white group-hover:text-cyan-300 transition">Agente Autónomo FTC</h4>
+            <p class="text-[11px] text-slate-400">Escribir código Java y guardarlo en PC</p>
+          </div>
+        </button>
+
+        <button onclick="switchTab('chat')" class="glass-panel p-4 rounded-xl border border-white/10 hover:border-indigo-400/50 text-left transition flex items-center space-x-3 group">
+          <div class="w-10 h-10 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
+            <i data-lucide="message-square" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h4 class="text-xs font-bold text-white group-hover:text-indigo-300 transition">Chat en Streaming</h4>
+            <p class="text-[11px] text-slate-400">Respuestas rápidas palabra por palabra</p>
+          </div>
+        </button>
+
+        <button onclick="switchTab('catalog')" class="glass-panel p-4 rounded-xl border border-white/10 hover:border-purple-400/50 text-left transition flex items-center space-x-3 group">
+          <div class="w-10 h-10 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
+            <i data-lucide="box" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h4 class="text-xs font-bold text-white group-hover:text-purple-300 transition">Ver los 20 Modelos</h4>
+            <p class="text-[11px] text-slate-400">Los 20 modelos locales listos para usar</p>
+          </div>
+        </button>
+      </div>
+
+      <!-- TIER 3 DETAILED EXPANSION: ALL 20 CURATED MODELS DIRECTLY IN THE MAP -->
+      <div class="glass-panel p-6 rounded-2xl border border-white/10 space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/10 pb-3">
+          <div class="flex items-center space-x-2">
+            <span class="text-xs font-bold px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 font-mono">TIER 3 EXPANDIDO</span>
+            <h3 class="text-base font-bold text-white">Los 20 Modelos de tu Ecosistema Local</h3>
+          </div>
+          <span class="text-xs text-slate-400">Haz clic en <strong>Descargar</strong> en cualquiera que necesites</span>
+        </div>
+
+        <!-- 20 Models Dynamic Showcase Grid -->
+        <div id="tier3-20-models-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+          <!-- Populated by app.js with all 20 models -->
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= VIEW 2: AGENTE AUTÓNOMO ================= -->
+    <div id="view-agent" class="hidden space-y-6">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 class="text-xl font-bold text-white flex items-center gap-2">
+            <i data-lucide="bot" class="w-5 h-5 text-cyan-400"></i>
+            Agente Autónomo de PC & Especialista FTC
+          </h2>
+          <p class="text-sm text-slate-400">Genera código Java de robótica y guárdalo directamente en tu computadora.</p>
+        </div>
+      </div>
+
+      <!-- FTC Templates Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <button onclick="loadFTCTemplate('autonomous')" class="glass-panel p-4 rounded-xl border border-white/10 hover:border-cyan-500/40 text-left transition space-y-2 group">
+          <div class="flex items-center justify-between">
+            <span class="text-lg">🤖</span>
+            <span class="text-[10px] px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 font-mono">FTC Java</span>
+          </div>
+          <h4 class="text-sm font-bold text-white group-hover:text-cyan-300 transition">Autonomous OpMode</h4>
+          <p class="text-xs text-slate-400">Autónomo con chasis Mecanum, detección AprilTag, encoders y timers.</p>
+        </button>
+
+        <button onclick="loadFTCTemplate('teleop')" class="glass-panel p-4 rounded-xl border border-white/10 hover:border-indigo-500/40 text-left transition space-y-2 group">
+          <div class="flex items-center justify-between">
+            <span class="text-lg">🎮</span>
+            <span class="text-[10px] px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 font-mono">FTC Gamepad</span>
+          </div>
+          <h4 class="text-sm font-bold text-white group-hover:text-indigo-300 transition">TeleOp Mecanum & Brazos</h4>
+          <p class="text-xs text-slate-400">Control manual con Gamepad1 (conducción) y Gamepad2 (servos / intake).</p>
+        </button>
+
+        <button onclick="loadFTCTemplate('hardware')" class="glass-panel p-4 rounded-xl border border-white/10 hover:border-purple-500/40 text-left transition space-y-2 group">
+          <div class="flex items-center justify-between">
+            <span class="text-lg">⚙️</span>
+            <span class="text-[10px] px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 font-mono">RobotMap</span>
+          </div>
+          <h4 class="text-sm font-bold text-white group-hover:text-purple-300 transition">HardwareMap & Subsystems</h4>
+          <p class="text-xs text-slate-400">Estructura limpia para definir motores, servos, IMU y sensores.</p>
+        </button>
+      </div>
+
+      <!-- Agent Workspace -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-1 glass-panel p-5 rounded-2xl border border-white/10 space-y-4">
+          <h3 class="text-sm font-bold text-white">Instrucción al Agente</h3>
+          <select id="agent-model-select" class="w-full glass-input text-xs text-white p-2.5 rounded-lg bg-slate-800">
+            <option value="qwen2.5-coder:1.5b" selected>💻 qwen2.5-coder:1.5b (Especialista FTC & Código)</option>
+            <option value="llama3.2:1b">⚡ llama3.2:1b (General Rápido)</option>
+          </select>
+          <textarea id="agent-task-input" rows="4" placeholder="Describe lo que debe programar tu agente..." class="w-full glass-input text-xs text-white p-3 rounded-lg resize-none"></textarea>
+          <input type="text" id="agent-filepath-input" placeholder="Nombre de archivo (ej: AutonomousMecanum.java)" class="w-full glass-input text-xs text-white p-2.5 rounded-lg">
+          <button onclick="runAgentTask()" id="btn-run-agent" class="w-full py-3 rounded-xl bg-gradient-to-r from-cyan-600 to-indigo-600 hover:from-cyan-500 hover:to-indigo-500 text-white font-semibold text-xs shadow-lg shadow-cyan-600/30 transition flex items-center justify-center space-x-2">
+            <i data-lucide="play" class="w-4 h-4"></i>
+            <span>Ejecutar Agente en mi PC</span>
+          </button>
+        </div>
+
+        <div class="lg:col-span-2 glass-panel p-5 rounded-2xl border border-white/10 flex flex-col min-h-[500px]">
+          <div class="flex items-center justify-between pb-3 border-b border-white/10 mb-3">
+            <h4 class="text-sm font-semibold text-white">Código Generado por el Agente</h4>
+            <div class="flex items-center space-x-2">
+              <button onclick="saveCurrentCodeToDisk()" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium transition flex items-center space-x-1">
+                <i data-lucide="save" class="w-3.5 h-3.5"></i>
+                <span>Guardar en mi PC</span>
+              </button>
+              <button onclick="copyAgentCode()" class="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition">
+                <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+              </button>
+            </div>
+          </div>
+          <div id="agent-status-bar" class="hidden p-2.5 mb-3 rounded-lg bg-slate-900 border border-white/5 text-xs flex items-center space-x-2 text-cyan-300">
+            <i data-lucide="loader" class="w-3.5 h-3.5 animate-spin"></i>
+            <span id="agent-status-text">Procesando código FTC...</span>
+          </div>
+          <div id="agent-code-container" class="flex-1 bg-black/60 rounded-xl p-4 overflow-auto font-mono text-xs text-slate-200 border border-white/5">
+            <span class="text-slate-500">// El código generado aparecerá aquí...</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= VIEW 3: CHAT ================= -->
+    <div id="view-chat" class="hidden flex flex-col h-[calc(100vh-12rem)] max-h-[850px] glass-panel rounded-2xl border border-white/10 overflow-hidden shadow-2xl">
+      <div class="p-4 border-b border-white/10 bg-slate-900/60 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center space-x-3">
+          <label class="text-xs text-slate-400 font-medium">Modelo Activo:</label>
+          <select id="chat-model-select" onchange="onModelChange()" class="glass-input text-xs font-medium text-white px-3 py-1.5 rounded-lg bg-slate-800">
+            <option value="llama3.2:1b">⚡ llama3.2:1b (General Rápido - 1.3 GB)</option>
+            <option value="qwen2.5-coder:1.5b">💻 qwen2.5-coder:1.5b (Programador FTC - 986 MB)</option>
+          </select>
+          <span id="selected-service-badge" class="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-white/10">Ollama</span>
+        </div>
+        <button onclick="clearChatHistory()" class="p-1.5 rounded-lg bg-slate-800 hover:bg-rose-900/50 hover:text-rose-300 text-slate-400 transition">
+          <i data-lucide="trash-2" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <div id="chat-messages" class="flex-1 p-4 sm:p-6 overflow-y-auto space-y-4">
+        <div class="glass-panel p-4 rounded-2xl border-white/10 text-sm leading-relaxed text-slate-200 max-w-3xl">
+          <p class="font-semibold text-white mb-1">¡Chat Multimodelo en Streaming!</p>
+          <p class="text-slate-300">Respuestas rápidas palabra por palabra sin tiempos de espera largos.</p>
+        </div>
+      </div>
+
+      <div class="p-4 border-t border-white/10 bg-slate-900/80">
+        <form onsubmit="handleChatSubmit(event)" class="flex items-center space-x-3">
+          <textarea id="chat-input" rows="1" onkeydown="handleInputKeydown(event)" placeholder="Escribe tu mensaje... (Shift+Enter para salto de línea)" class="w-full glass-input rounded-xl px-4 py-3 text-sm text-white placeholder-slate-500 resize-none"></textarea>
+          <button type="submit" id="btn-send-chat" class="px-5 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-cyan-600 hover:from-indigo-500 hover:to-cyan-500 text-white font-medium text-sm shadow-md transition shrink-0">
+            <span>Enviar</span>
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- ================= VIEW 4: CATALOG ================= -->
+    <div id="view-catalog" class="hidden space-y-6">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-xl font-bold text-white flex items-center gap-2">
+            <i data-lucide="box" class="w-5 h-5 text-purple-400"></i>
+            Catálogo Curado de 20 Modelos Locales
+          </h2>
+          <p class="text-sm text-slate-400">Protegido por el Guardián de 5 GB para nunca saturar tu disco.</p>
+        </div>
+        <span class="text-xs bg-slate-800/80 px-3.5 py-1.5 rounded-full border border-white/10 font-mono" id="catalog-disk-free">
+          2.85 GB disponibles del cupo de 5 GB
+        </span>
+      </div>
+      <div id="catalog-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+    </div>
+
+    <!-- ================= VIEW 5: RADAR ================= -->
+    <div id="view-radar" class="hidden space-y-6">
+      <div class="flex items-center justify-between">
+        <h2 class="text-xl font-bold text-white">Radar de Puertos y Servicios</h2>
+        <button onclick="scanAllServices()" class="px-3 py-1.5 rounded-lg bg-slate-800 text-xs">Reescanear</button>
+      </div>
+      <div id="services-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+    </div>
+  </main>
+
+  <div id="toast-container" class="fixed bottom-4 right-4 z-50 space-y-2 pointer-events-none"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
