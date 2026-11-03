@@ -109,20 +109,28 @@ Requisitos:
 - Método init(HardwareMap hwMap) que configure direcciones, modo BRAKE y ponga potencias a 0
 - Métodos auxiliares para mover el chasis hacia adelante, atrás y frenar`,
 
-  intoTheDeep: `Crea un Autonomous OpMode completo en Java para la temporada oficial de FIRST Tech Challenge: INTO THE DEEP llamado "IntoTheDeepAutonomous".
+  biobuzz: `Crea un Autonomous OpMode completo en Java para la temporada oficial de FIRST Tech Challenge: BIOBUZZ llamado "BioBuzzAutonomous".
 Requisitos:
-- Usa @Autonomous(name="Into The Deep Auto", group="BIOBUZZ 24096")
+- Usa @Autonomous(name="BioBuzz Auto", group="BIOBUZZ 24096")
 - Hereda de LinearOpMode
 - Control de 4 motores Mecanum (DcMotorEx) con encoders y cálculo de distancia
-- Control de motor de elevador (liftMotor) con RUN_TO_POSITION para colocar el Specimen en la High Chamber del Submersible
-- Control de garra (clawServo) y muñeca (wristServo)
-- Rutina autónoma:
-  1. Salir de la pared inicial hacia el Submersible
-  2. Elevar el brazo y enganchar el Specimen en la High Chamber
-  3. Retroceder y girar hacia las muestras (Samples) del suelo
-  4. Agarrar muestra y depositar en la Net Zone
-  5. Desplazarse al área de Observation Zone y estacionarse (Park)
-- Telemetría en tiempo real para Driver Station y frenos BRAKE en todos los motores`
+- Control de motor de elevador (liftMotor) con RUN_TO_POSITION para puntuación
+- Control de garra / intake (clawServo / intakeMotor)
+- Rutina autónoma oficial de competición BIOBUZZ:
+  1. Salida de la pared de inicio hacia la zona de juego con encoders
+  2. Ejecución de la rutina principal de puntuación
+  3. Desplazamiento y recolección de elementos de juego
+  4. Depósito en la zona designada
+  5. Navegación hacia la zona de parqueo (Park) al finalizar los 30 segundos
+- Telemetría en tiempo real para Driver Station y frenos BRAKE en todos los motores`,
+
+  intoTheDeep: `Crea un Autonomous OpMode completo en Java para la temporada oficial de FIRST Tech Challenge: BIOBUZZ llamado "BioBuzzAutonomous".
+Requisitos:
+- Usa @Autonomous(name="BioBuzz Auto", group="BIOBUZZ 24096")
+- Hereda de LinearOpMode
+- Control de 4 motores Mecanum (DcMotorEx) con encoders
+- Control de mecanismos de puntuación e intake
+- Rutina autónoma oficial de competición BIOBUZZ con telemetría`
 };
 
 // ================= INITIALIZATION =================
@@ -418,7 +426,7 @@ function loadFTCTemplate(type) {
     if (type === 'autonomous') pathInput.value = 'AutonomousMecanum.java';
     if (type === 'teleop') pathInput.value = 'TeleOpMecanumDrive.java';
     if (type === 'hardware') pathInput.value = 'RobotHardware.java';
-    if (type === 'intoTheDeep') pathInput.value = 'IntoTheDeepAutonomous.java';
+    if (type === 'biobuzz' || type === 'intoTheDeep') pathInput.value = 'BioBuzzAutonomous.java';
 
     showToast(`Plantilla FTC cargada. Pulsa "Ejecutar Agente" para compilarla en tu PC.`, 'info');
   }
