@@ -505,7 +505,26 @@ Sin introducciones, sin saludos ni rodeos. Ve directo al grano con el código ex
 
   } catch (err) {
     console.error('Agent error:', err);
-    statusText.innerText = `⚠️ Error del agente: ${err.message}`;
+    if (err.message.includes('not found') || err.message.includes('404')) {
+      statusText.innerText = `⚠️ Ese modelo ya no está instalado. Generando automáticamente con llama3.2:1b...`;
+      try {
+        let accumulatedCode = '';
+        await sendToOllama('llama3.2:1b', task, systemPrompt, 0.2, (chunk) => {
+          accumulatedCode = chunk;
+          codeBox.innerText = accumulatedCode;
+        });
+        currentGeneratedCode = accumulatedCode;
+        codeBox.innerText = currentGeneratedCode;
+        statusText.innerText = `✅ Código generado con éxito usando llama3.2:1b.`;
+        const sel = document.getElementById('agent-model-select');
+        if (sel) sel.value = 'llama3.2:1b';
+        return;
+      } catch (retryErr) {
+        statusText.innerText = `⚠️ Error del agente: ${retryErr.message}`;
+      }
+    } else {
+      statusText.innerText = `⚠️ Error del agente: ${err.message}`;
+    }
     showToast(`Error: ${err.message}`, 'error');
   } finally {
     btn.disabled = false;
