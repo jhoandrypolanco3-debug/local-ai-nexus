@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es" class="dark">
 <head>
   <meta charset="UTF-8">
@@ -322,33 +322,25 @@
             <option value="qwen2.5-coder:1.5b">💻 qwen2.5-coder:1.5b (Local en tu PC - FTC Especialista)</option>
           </select>
 
-          <!-- Quick Mechanism Builder Pills -->
-          <div class="space-y-1.5">
-            <div class="flex items-center justify-between">
-              <span class="text-[10px] text-slate-400 font-medium">Añadir mecanismos a tu robot:</span>
-              <button type="button" onclick="clearAgentTask()" class="px-2 py-0.5 rounded bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 text-[10px] border border-rose-500/20 transition">🗑️ Limpiar</button>
-            </div>
-            <div class="flex flex-wrap gap-1">
-              <button type="button" onclick="loadShooterIntakeOnly()" class="px-2.5 py-1 rounded bg-amber-500/25 hover:bg-amber-500/40 text-amber-300 font-bold text-[10px] border border-amber-500/40 transition shadow-sm">🎯 Solo Shooter + Intake</button>
-              <button type="button" onclick="loadAutonomousShooterIntake()" class="px-2.5 py-1 rounded bg-indigo-500/25 hover:bg-indigo-500/40 text-indigo-300 font-bold text-[10px] border border-indigo-500/40 transition shadow-sm">🤖 Autónomo Shooter + Intake</button>
-              <button type="button" onclick="loadJhoandriPathingAuto()" class="px-2.5 py-1 rounded bg-emerald-500/25 hover:bg-emerald-500/40 text-emerald-300 font-bold text-[10px] border border-emerald-500/40 transition shadow-sm">🛤️ JhoandriPathing (Bezier)</button>
-              <button type="button" onclick="appendMechanism('chasis Mecanum de 4 motores')" class="px-2 py-1 rounded bg-slate-800 hover:bg-cyan-500/20 text-cyan-300 text-[10px] border border-white/10 transition">+ Mecanum</button>
-              <button type="button" onclick="appendMechanism('shooter con control de velocidad por encoder y PID')" class="px-2 py-1 rounded bg-slate-800 hover:bg-amber-500/20 text-amber-300 text-[10px] border border-white/10 transition">+ Shooter PID</button>
-              <button type="button" onclick="appendMechanism('intake de recolección')" class="px-2 py-1 rounded bg-slate-800 hover:bg-indigo-500/20 text-indigo-300 text-[10px] border border-white/10 transition">+ Intake</button>
-              <button type="button" onclick="appendMechanism('limelight 3A visión y auto-aim')" class="px-2 py-1 rounded bg-slate-800 hover:bg-purple-500/20 text-purple-300 text-[10px] border border-white/10 transition">+ Limelight 3A</button>
-            </div>
+          <!-- Boton Directo Shooter + Intake -->
+          <div class="space-y-2">
+            <button type="button" onclick="loadShooterIntakeOnly()" class="w-full py-2.5 px-3 rounded-xl bg-amber-500/25 hover:bg-amber-500/35 text-amber-300 font-bold text-xs border border-amber-500/40 transition shadow-sm flex items-center justify-center space-x-2">
+              <i data-lucide="crosshair" class="w-4 h-4"></i>
+              <span>Cargar Solo Shooter + Intake (BioBuzz 24096)</span>
+            </button>
           </div>
-          <textarea id="agent-task-input"
-          <input type="text" id="agent-filepath-input" placeholder="Nombre de archivo (ej: TeleOpBioBuzzMaster.java)" class="w-full glass-input text-xs text-white p-2.5 rounded-lg">
+
+          <textarea id="agent-task-input" rows="4" placeholder="Describe lo que debe programar tu agente..." class="w-full glass-input text-xs text-white p-3 rounded-lg resize-none"></textarea>
+          <input type="text" id="agent-filepath-input" placeholder="Nombre de archivo" value="TeleOpShooter.java" class="w-full glass-input text-xs text-white p-2.5 rounded-lg">
           
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            <button onclick="runInstantAgent()" id="btn-instant-agent" class="py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white font-bold text-xs shadow-lg shadow-amber-500/25 transition flex items-center justify-center space-x-1.5" title="Genera código instantáneo en 0.1 segundos sin esperas">
+            <button onclick="runInstantAgent()" id="btn-instant-agent" class="py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white font-bold text-xs shadow-lg shadow-amber-500/25 transition flex items-center justify-center space-x-1.5" title="Genera codigo instantaneo">
               <i data-lucide="zap" class="w-4 h-4"></i>
-              <span>⚡ Modo Turbo (&lt; 1 seg)</span>
+              <span>Modo Turbo (&lt; 0.1s)</span>
             </button>
-            <button onclick="runAgentTask()" id="btn-run-agent" class="py-3 rounded-xl bg-gradient-to-r from-cyan-600 to-indigo-600 hover:from-cyan-500 hover:to-indigo-500 text-white font-semibold text-xs shadow-lg shadow-cyan-600/30 transition flex items-center justify-center space-x-1.5" title="Generación completa con IA">
+            <button onclick="runAgentTask()" id="btn-run-agent" class="py-3 rounded-xl bg-gradient-to-r from-cyan-600 to-indigo-600 hover:from-cyan-500 hover:to-indigo-500 text-white font-semibold text-xs shadow-lg shadow-cyan-600/30 transition flex items-center justify-center space-x-1.5" title="Generar con IA">
               <i data-lucide="play" class="w-4 h-4"></i>
-              <span>Cerebro IA Completo</span>
+              <span>Generar con IA</span>
             </button>
           </div>
         </div>
@@ -528,6 +520,6 @@
 
   <div id="toast-container" class="fixed bottom-4 right-4 z-50 space-y-2 pointer-events-none"></div>
 
-  <script src="app.js"></script>
+  <script src="app.js?v=1793734633368"></script>
 </body>
 </html>
