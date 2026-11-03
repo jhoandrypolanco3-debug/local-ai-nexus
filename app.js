@@ -1264,12 +1264,12 @@ async function populateChatModelsDropdown() {
 
   select.innerHTML = fullHtml;
   if (agentSelect) {
-    agentSelect.innerHTML = 
-      <option value="turbo-biobuzz" selected>âš¡ Modo Turbo BioBuzz (&lt; 0.1s - IdÃ©ntico a tu Android Studio)</option>
-      <option value="neoia-cloud">â˜ï¸ NeoIA Cloud (DeepSeek GPU - Como ChatGPT, 5-10s)</option>
-      <option value="llama3.2:1b">ðŸ§  llama3.2:1b (Local en tu PC - 100% Offline)</option>
-      <option value="qwen2.5-coder:1.5b">ðŸ’» qwen2.5-coder:1.5b (Local en tu PC - Coder FTC)</option>
-    ;
+    agentSelect.innerHTML = `
+      <option value="turbo-biobuzz" selected>⚡ Modo Turbo BioBuzz (&lt; 0.1s - Idéntico a tu Android Studio)</option>
+      <option value="neoia-cloud">☁️ NeoIA Cloud (DeepSeek GPU - Como ChatGPT, 5-10s)</option>
+      <option value="llama3.2:1b">🧠 llama3.2:1b (Local en tu PC - 100% Offline)</option>
+      <option value="qwen2.5-coder:1.5b">💻 qwen2.5-coder:1.5b (Local en tu PC - Coder FTC)</option>
+    `;
   }
 
   onModelChange();
