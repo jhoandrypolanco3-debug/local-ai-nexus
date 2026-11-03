@@ -466,7 +466,7 @@ Sin introducciones, sin saludos ni rodeos. Ve directo al grano con el código ex
 
     let accumulatedCode = '';
     if (modelId === 'neoia-cloud') {
-      statusText.innerText = 'Consultando a NeoIA Cloud (DeepSeek en Render)...';
+      statusText.innerText = '⚡ Conectando con NeoIA Cloud (DeepSeek GPU)... Generando código de alta velocidad...';
       const cloudRes = await fetch('/api/cloud-chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -475,10 +475,17 @@ Sin introducciones, sin saludos ni rodeos. Ve directo al grano con el código ex
       const cloudData = await cloudRes.json();
       accumulatedCode = cloudData.reply || cloudData.error || '';
       codeBox.innerText = accumulatedCode;
+      codeBox.scrollTop = codeBox.scrollHeight;
     } else {
+      let chunkCount = 0;
       const res = await sendToOllama(modelId, task, systemPrompt, 0.2, (chunk) => {
+        chunkCount++;
         accumulatedCode = chunk;
         codeBox.innerText = accumulatedCode;
+        codeBox.scrollTop = codeBox.scrollHeight;
+        if (chunkCount % 10 === 0) {
+          statusText.innerText = `Escribiendo código Java en vivo (${accumulatedCode.length} caracteres)...`;
+        }
       });
     }
 
