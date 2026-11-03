@@ -210,20 +210,28 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // 3. Agent Tool: Write File to PC
+  // 3. Agent Tool: Write File to PC (direct to Android Studio if requested)
   if (pathname === '/api/agent/write-file' && req.method === 'POST') {
     let body = '';
     req.on('data', chunk => body += chunk);
     req.on('end', () => {
       try {
-        const { filePath, content } = JSON.parse(body);
+        const { filePath, content, targetAndroidStudio } = JSON.parse(body);
         if (!filePath || content === undefined) {
           res.writeHead(400, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ error: 'filePath y content son requeridos' }));
           return;
         }
 
-        const resolved = path.isAbsolute(filePath) ? filePath : path.join(process.env.USERPROFILE || 'C:\\', filePath);
+        const androidStudioDir = 'C:\\Users\\jhoan\\AndroidStudioProjects\\BioBuzzFTC12\\TeamCode\\src\\main\\java\\org\\firstinspires\\ftc\\teamcode';
+        let resolved;
+        if (targetAndroidStudio || filePath.startsWith('TeamCode') || (!path.isAbsolute(filePath) && fs.existsSync(androidStudioDir))) {
+          const base = path.basename(filePath);
+          resolved = path.join(androidStudioDir, base);
+        } else {
+          resolved = path.isAbsolute(filePath) ? filePath : path.join(process.env.USERPROFILE || 'C:\\', filePath);
+        }
+
         const dir = path.dirname(resolved);
         fs.mkdirSync(dir, { recursive: true });
         fs.writeFileSync(resolved, content, 'utf8');

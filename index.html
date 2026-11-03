@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es" class="dark">
 <head>
   <meta charset="UTF-8">
@@ -315,10 +315,11 @@
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div class="lg:col-span-1 glass-panel p-5 rounded-2xl border border-white/10 space-y-4">
           <h3 class="text-sm font-bold text-white">Instrucción al Agente</h3>
-          <select id="agent-model-select" class="w-full glass-input text-xs text-white p-2.5 rounded-lg bg-slate-800">
-            <option value="neoia-cloud" selected>☁️ NeoIA Cloud (DeepSeek GPU - Súper Rápido 10-15s)</option>
-            <option value="llama3.2:1b">⚡ llama3.2:1b (Local en tu PC - 100% Offline)</option>
-            <option value="qwen2.5-coder:1.5b">💻 qwen2.5-coder:1.5b (Local en tu PC - FTC Especialista)</option>
+                    <select id="agent-model-select" class="w-full glass-input text-xs text-white p-2.5 rounded-lg bg-slate-800">
+            <option value="turbo-biobuzz" selected>âš¡ Modo Turbo BioBuzz (&lt; 0.1s - IdÃ©ntico a tu Android Studio)</option>
+            <option value="neoia-cloud">â˜ï¸ NeoIA Cloud (DeepSeek GPU - Como ChatGPT, 5-10s)</option>
+            <option value="llama3.2:1b">ðŸ§  llama3.2:1b (Local en tu PC - 100% Offline)</option>
+            <option value="qwen2.5-coder:1.5b">ðŸ’» qwen2.5-coder:1.5b (Local en tu PC - FTC Especialista)</option>
           </select>
 
           <!-- Quick Mechanism Builder Pills -->
@@ -328,16 +329,15 @@
               <button type="button" onclick="clearAgentTask()" class="px-2 py-0.5 rounded bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 text-[10px] border border-rose-500/20 transition">🗑️ Limpiar</button>
             </div>
             <div class="flex flex-wrap gap-1">
-              <button type="button" onclick="loadShooterIntakeOnly()" class="px-2.5 py-1 rounded bg-amber-500/25 hover:bg-amber-500/40 text-amber-300 font-bold text-[10px] border border-amber-500/40 transition shadow-sm">🎯 Solo Shooter + Intake</button>
+              <button type="button" onclick="loadShooterIntakeOnly()" class="px-2.5 py-1 rounded bg-amber-500/25 hover:bg-amber-500/40 text-amber-300 font-bold text-[10px] border border-amber-500/40 transition shadow-sm">ðŸŽ¯ Solo Shooter + Intake</button>
+              <button type="button" onclick="loadAutonomousShooterIntake()" class="px-2.5 py-1 rounded bg-indigo-500/25 hover:bg-indigo-500/40 text-indigo-300 font-bold text-[10px] border border-indigo-500/40 transition shadow-sm">ðŸ¤– AutÃ³nomo Shooter + Intake</button>
+              <button type="button" onclick="loadJhoandriPathingAuto()" class="px-2.5 py-1 rounded bg-emerald-500/25 hover:bg-emerald-500/40 text-emerald-300 font-bold text-[10px] border border-emerald-500/40 transition shadow-sm">ðŸ›¤ï¸ JhoandriPathing (Bezier)</button>
               <button type="button" onclick="appendMechanism('chasis Mecanum de 4 motores')" class="px-2 py-1 rounded bg-slate-800 hover:bg-cyan-500/20 text-cyan-300 text-[10px] border border-white/10 transition">+ Mecanum</button>
               <button type="button" onclick="appendMechanism('shooter con control de velocidad por encoder y PID')" class="px-2 py-1 rounded bg-slate-800 hover:bg-amber-500/20 text-amber-300 text-[10px] border border-white/10 transition">+ Shooter PID</button>
-              <button type="button" onclick="appendMechanism('intake de recolección')" class="px-2 py-1 rounded bg-slate-800 hover:bg-indigo-500/20 text-indigo-300 text-[10px] border border-white/10 transition">+ Intake</button>
-              <button type="button" onclick="appendMechanism('elevador linear slides con RUN_TO_POSITION')" class="px-2 py-1 rounded bg-slate-800 hover:bg-emerald-500/20 text-emerald-300 text-[10px] border border-white/10 transition">+ Elevador</button>
-              <button type="button" onclick="appendMechanism('webcam USB con VisionPortal para AprilTags')" class="px-2 py-1 rounded bg-slate-800 hover:bg-purple-500/20 text-purple-300 text-[10px] border border-white/10 transition">+ AprilTags</button>
-              <button type="button" onclick="appendMechanism('control independiente para 2 gamepads')" class="px-2 py-1 rounded bg-slate-800 hover:bg-pink-500/20 text-pink-300 text-[10px] border border-white/10 transition">+ 2 Mandos</button>
+              <button type="button" onclick="appendMechanism('intake de recolecciÃ³n')" class="px-2 py-1 rounded bg-slate-800 hover:bg-indigo-500/20 text-indigo-300 text-[10px] border border-white/10 transition">+ Intake</button>
+              <button type="button" onclick="appendMechanism('limelight 3A vision y auto-aim')" class="px-2 py-1 rounded bg-slate-800 hover:bg-purple-500/20 text-purple-300 text-[10px] border border-white/10 transition">+ Limelight 3A</button>
             </div>
           </div>
-
           <textarea id="agent-task-input" rows="4" placeholder="Describe lo que debe programar tu agente..." class="w-full glass-input text-xs text-white p-3 rounded-lg resize-none"></textarea>
           <input type="text" id="agent-filepath-input" placeholder="Nombre de archivo (ej: TeleOpBioBuzzMaster.java)" class="w-full glass-input text-xs text-white p-2.5 rounded-lg">
           
@@ -357,9 +357,13 @@
           <div class="flex items-center justify-between pb-3 border-b border-white/10 mb-3">
             <h4 class="text-sm font-semibold text-white">Código Generado por el Agente</h4>
             <div class="flex items-center space-x-2">
-              <button onclick="saveCurrentCodeToDisk()" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium transition flex items-center space-x-1">
+              <button onclick="saveToAndroidStudio()" class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-semibold shadow-md transition flex items-center space-x-1.5" title="Guardar directamente dentro de BioBuzzFTC12 en Android Studio">
+                <i data-lucide="folder-down" class="w-3.5 h-3.5"></i>
+                <span>Guardar en Android Studio</span>
+              </button>
+              <button onclick="saveCurrentCodeToDisk()" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium transition flex items-center space-x-1" title="Guardar con otro nombre">
                 <i data-lucide="save" class="w-3.5 h-3.5"></i>
-                <span>Guardar en mi PC</span>
+                <span>Otro lugar</span>
               </button>
               <button onclick="copyAgentCode()" class="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition">
                 <i data-lucide="copy" class="w-3.5 h-3.5"></i>
