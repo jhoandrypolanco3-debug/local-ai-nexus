@@ -89,6 +89,12 @@
           <span class="hidden sm:inline">Celular QR</span>
         </button>
 
+        <!-- NeoIA Cloud Link -->
+        <a href="https://neoia-351a.onrender.com/" target="_blank" class="p-2 px-3 rounded-lg bg-gradient-to-r from-cyan-600/30 to-blue-600/30 hover:from-cyan-500/40 hover:to-blue-500/40 text-cyan-300 hover:text-white transition text-xs flex items-center space-x-1.5 border border-cyan-500/30 shadow-sm" title="Abrir NeoIA Cloud en Render">
+          <i data-lucide="cloud" class="w-4 h-4 text-cyan-400"></i>
+          <span class="hidden sm:inline font-semibold">NeoIA Cloud 🌐</span>
+        </a>
+
         <button id="btn-refresh-all" onclick="scanAllServices()" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition flex items-center space-x-1 text-xs border border-white/10" title="Reescanear conexiones">
           <i data-lucide="refresh-cw" class="w-4 h-4"></i>
         </button>
@@ -267,7 +273,7 @@
       </div>
 
       <!-- FTC Templates Grid -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <button onclick="loadFTCTemplate('autonomous')" class="glass-panel p-4 rounded-xl border border-white/10 hover:border-cyan-500/40 text-left transition space-y-2 group">
           <div class="flex items-center justify-between">
             <span class="text-lg">🤖</span>
@@ -293,6 +299,15 @@
           </div>
           <h4 class="text-sm font-bold text-white group-hover:text-purple-300 transition">HardwareMap & Subsystems</h4>
           <p class="text-xs text-slate-400">Estructura limpia para definir motores, servos y sensores.</p>
+        </button>
+
+        <button onclick="loadFTCTemplate('intoTheDeep')" class="glass-panel p-4 rounded-xl border border-amber-500/30 hover:border-amber-400 bg-amber-500/5 text-left transition space-y-2 group shadow-lg shadow-amber-500/10">
+          <div class="flex items-center justify-between">
+            <span class="text-lg">🌊</span>
+            <span class="text-[10px] px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-mono font-bold">INTO THE DEEP</span>
+          </div>
+          <h4 class="text-sm font-bold text-white group-hover:text-amber-300 transition">Submersible & Specimen</h4>
+          <p class="text-xs text-slate-400">Rutina 2024-2025: High Chamber, Samples y Ascent con encoders.</p>
         </button>
       </div>
 

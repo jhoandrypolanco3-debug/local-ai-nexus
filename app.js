@@ -66,10 +66,10 @@ let activeRagContext = '';
 let activeRagFileName = '';
 
 const SYSTEM_PRESETS = {
-  general: 'Eres un asistente de IA local útil, inteligente, preciso y respetuoso. Responde siempre en español brevemente.',
-  ftc: 'Eres un programador senior y mentor experto en FIRST Tech Challenge (FTC). Escribes código Java limpio, robusto y listo para compilar en Android Studio usando el FTC SDK (LinearOpMode, TeleOp, Autonomous, HardwareMap, DcMotor, Servo, AprilTags).',
-  coder: 'Eres un programador senior experto en software, arquitectura limpia, algoritmos y depuración. Provee código limpio y optimizado.',
-  concise: 'Eres un motor de respuestas de máxima síntesis. Responde directamente al grano sin formalidades.'
+  general: 'Eres NeoIA, el asistente de inteligencia artificial y mentor de desarrollo para el equipo de robótica BIOBUZZ 24096 (FIRST Tech Challenge). Eres útil, inteligente, preciso y respetuoso. Si te preguntan quién eres o quién te creó, responde con orgullo que eres NeoIA de BIOBUZZ 24096. Nunca digas que fuiste creado por Anthropic ni OpenAI. Responde siempre en español brevemente.',
+  ftc: 'Eres NeoIA, programador senior y mentor experto en FIRST Tech Challenge (FTC) para el equipo BIOBUZZ 24096. Escribes código Java limpio, robusto y listo para compilar en Android Studio usando el FTC SDK oficial (LinearOpMode, TeleOp, Autonomous, HardwareMap, DcMotorEx, Servos, Road Runner, Limelight, AprilTags). Tu identidad es NeoIA.',
+  coder: 'Eres NeoIA Coder, un programador senior experto en software, arquitectura limpia, algoritmos y depuración. Provee código limpio y optimizado.',
+  concise: 'Eres NeoIA, motor de respuestas de máxima síntesis. Responde directamente al grano sin formalidades.'
 };
 
 // FTC Templates
@@ -96,7 +96,22 @@ Requisitos:
 - Define 4 motores de chasis (DcMotorEx)
 - Define 1 motor de intake y 1 servo de garra
 - Método init(HardwareMap hwMap) que configure direcciones, modo BRAKE y ponga potencias a 0
-- Métodos auxiliares para mover el chasis hacia adelante, atrás y frenar`
+- Métodos auxiliares para mover el chasis hacia adelante, atrás y frenar`,
+
+  intoTheDeep: `Crea un Autonomous OpMode completo en Java para la temporada oficial de FIRST Tech Challenge: INTO THE DEEP llamado "IntoTheDeepAutonomous".
+Requisitos:
+- Usa @Autonomous(name="Into The Deep Auto", group="BIOBUZZ 24096")
+- Hereda de LinearOpMode
+- Control de 4 motores Mecanum (DcMotorEx) con encoders y cálculo de distancia
+- Control de motor de elevador (liftMotor) con RUN_TO_POSITION para colocar el Specimen en la High Chamber del Submersible
+- Control de garra (clawServo) y muñeca (wristServo)
+- Rutina autónoma:
+  1. Salir de la pared inicial hacia el Submersible
+  2. Elevar el brazo y enganchar el Specimen en la High Chamber
+  3. Retroceder y girar hacia las muestras (Samples) del suelo
+  4. Agarrar muestra y depositar en la Net Zone
+  5. Desplazarse al área de Observation Zone y estacionarse (Park)
+- Telemetría en tiempo real para Driver Station y frenos BRAKE en todos los motores`
 };
 
 // ================= INITIALIZATION =================
@@ -392,6 +407,7 @@ function loadFTCTemplate(type) {
     if (type === 'autonomous') pathInput.value = 'AutonomousMecanum.java';
     if (type === 'teleop') pathInput.value = 'TeleOpMecanumDrive.java';
     if (type === 'hardware') pathInput.value = 'RobotHardware.java';
+    if (type === 'intoTheDeep') pathInput.value = 'IntoTheDeepAutonomous.java';
 
     showToast(`Plantilla FTC cargada. Pulsa "Ejecutar Agente" para compilarla en tu PC.`, 'info');
   }
@@ -421,9 +437,9 @@ async function runAgentTask() {
   codeBox.innerHTML = '<span class="text-cyan-400">Generando código en tiempo real con tu modelo local...</span>';
 
   try {
-    let systemPrompt = `Eres un agente de desarrollo de software y mentor de FIRST Tech Challenge (FTC).
+    let systemPrompt = `Eres NeoIA, el agente autónomo de desarrollo y mentor de FIRST Tech Challenge (FTC) para el equipo BIOBUZZ 24096.
 Tu trabajo es generar código Java de competición, limpio, sin placeholders incompletos, listo para Android Studio / TeamCode.
-Devuelve el código dentro de un bloque \`\`\`java y una breve explicación al final.`;
+Devuelve el código dentro de un bloque \`\`\`java y una breve explicación al final. Nunca digas que fuiste creado por Anthropic ni OpenAI.`;
 
     if (activeRagContext) {
       systemPrompt += `\n\n[CONTEXTO RAG - DOCUMENTO ${activeRagFileName}]:\n${activeRagContext}`;
