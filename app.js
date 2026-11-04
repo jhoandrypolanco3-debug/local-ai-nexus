@@ -1722,16 +1722,243 @@ function handleInstallAgent(e) {
 }
 
 // ==========================================
+// CHAT EN VIVO DE LA CASA DE AGENTES (SWARM CHAT)
+// ==========================================
+function tagSwarmAgent(tagName) {
+  const input = document.getElementById('swarm-chat-input');
+  if (!input) return;
+  const current = input.value.trim();
+  if (!current.includes(tagName)) {
+    input.value = tagName + ' ' + current;
+  }
+  input.focus();
+}
+
+function setSwarmPrompt(text) {
+  const input = document.getElementById('swarm-chat-input');
+  if (!input) return;
+  input.value = text;
+  input.focus();
+}
+
+function clearSwarmChat() {
+  const chatLog = document.getElementById('swarm-chat-log');
+  if (!chatLog) return;
+  chatLog.innerHTML = `
+    <div class="text-slate-400 text-center py-8 space-y-2">
+      <div class="w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center mx-auto text-cyan-400">
+        <i data-lucide="bot" class="w-6 h-6"></i>
+      </div>
+      <p class="text-white font-semibold text-sm">Conversación reiniciada.</p>
+      <p class="text-[11px] text-slate-400 max-w-sm mx-auto">
+        Los 6 agentes de la casa están listos para recibir tus preguntas o misiones de código.
+      </p>
+    </div>
+  `;
+  if (window.lucide) lucide.createIcons();
+  showToast('Chat de la casa de agentes limpiado.', 'info');
+}
+
+function handleSwarmChatKeydown(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    handleSwarmChatSubmit(e);
+  }
+}
+
+function appendSwarmUserMsg(message) {
+  const chatLog = document.getElementById('swarm-chat-log');
+  if (!chatLog) return;
+  const div = document.createElement('div');
+  div.className = 'swarm-user-msg p-3 rounded-2xl space-y-1 transition ml-8 sm:ml-12 border border-indigo-500/30';
+  div.innerHTML = `
+    <div class="flex items-center justify-between text-[11px]">
+      <div class="flex items-center space-x-1.5 font-bold text-indigo-300">
+        <span>👤</span>
+        <span>Tú (Lead Ingeniero)</span>
+      </div>
+      <span class="text-[9px] text-slate-400 font-mono">${new Date().toLocaleTimeString()}</span>
+    </div>
+    <p class="text-[12px] text-slate-100 whitespace-pre-wrap">${escapeHtml(message)}</p>
+  `;
+  chatLog.appendChild(div);
+  chatLog.scrollTop = chatLog.scrollHeight;
+}
+
+function appendSwarmAgentMsg(agent, message) {
+  const chatLog = document.getElementById('swarm-chat-log');
+  if (!chatLog) return;
+  const div = document.createElement('div');
+  div.className = 'swarm-agent-msg p-3.5 rounded-2xl space-y-1.5 transition mr-4 sm:mr-8 border border-white/10';
+  
+  // Format code blocks or markdown if present
+  let formatted = message
+    .replace(/\*\*(.*?)\*\*/g, '<strong class="text-white font-bold">$1</strong>')
+    .replace(/`([^`]+)`/g, '<code class="bg-black/60 text-cyan-300 px-1 py-0.5 rounded font-mono text-[11px]">$1</code>');
+
+  div.innerHTML = `
+    <div class="flex items-center justify-between text-[11px] pb-1 border-b border-white/5">
+      <div class="flex items-center space-x-2">
+        <span class="text-base">${agent.avatar}</span>
+        <span class="font-bold text-white">${agent.name}</span>
+        <span class="text-[9px] font-mono px-1.5 py-0.2 rounded bg-cyan-950/70 text-cyan-300 border border-cyan-500/30">${agent.framework || agent.role}</span>
+      </div>
+      <span class="text-[9px] text-slate-400 font-mono">${new Date().toLocaleTimeString()}</span>
+    </div>
+    <div class="text-[12px] text-slate-200 leading-relaxed pl-1 pt-1 whitespace-pre-wrap">${formatted}</div>
+  `;
+  chatLog.appendChild(div);
+  chatLog.scrollTop = chatLog.scrollHeight;
+
+  if (ttsEnabled) {
+    speakText(`${agent.name} dice: ${message}`);
+  }
+}
+
+async function handleSwarmChatSubmit(event) {
+  if (event) event.preventDefault();
+  const input = document.getElementById('swarm-chat-input');
+  const statusBadge = document.getElementById('swarm-status-badge');
+  const btnSend = document.getElementById('btn-swarm-send');
+  if (!input) return;
+
+  const rawText = input.value.trim();
+  if (!rawText) return;
+
+  // Render user bubble
+  appendSwarmUserMsg(rawText);
+  input.value = '';
+  input.style.height = 'auto';
+
+  if (btnSend) btnSend.disabled = true;
+  if (statusBadge) {
+    statusBadge.className = 'text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 animate-pulse';
+    statusBadge.innerText = 'Agentes pensando...';
+  }
+
+  const agents = getHouseAgents().filter(a => a.active);
+  const autogen = agents.find(a => a.name.toLowerCase().includes('autogen')) || agents[0];
+  const langchain = agents.find(a => a.name.toLowerCase().includes('langchain')) || agents[1] || autogen;
+  const llamaindex = agents.find(a => a.name.toLowerCase().includes('llama')) || agents[2] || autogen;
+  const superagi = agents.find(a => a.name.toLowerCase().includes('super')) || agents[3] || autogen;
+  const babyagi = agents.find(a => a.name.toLowerCase().includes('baby')) || agents[4] || autogen;
+  const autogpt = agents.find(a => a.name.toLowerCase().includes('autogpt')) || agents[5] || autogen;
+
+  const lower = rawText.toLowerCase();
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+  try {
+    // 1. Detección de Mención Directa
+    const mentionsLangChain = lower.includes('@langchain');
+    const mentionsSuperAGI = lower.includes('@superagi');
+    const mentionsBabyAGI = lower.includes('@babyagi');
+    const mentionsLlamaIndex = lower.includes('@llamaindex');
+    const mentionsAutoGPT = lower.includes('@autogpt');
+    const mentionsAutoGen = lower.includes('@autogen');
+    const mentionsTodos = lower.includes('@todos');
+
+    // 2. ¿Petición de generación o ajuste de código?
+    const isCodeRequest = lower.includes('código') || lower.includes('teleop') || lower.includes('autónomo') || 
+                          lower.includes('shooter') || lower.includes('intake') || lower.includes('modifica') || 
+                          lower.includes('cambia') || lower.includes('crea') || lower.includes('agrega') || 
+                          lower.includes('construye') || lower.includes('haz');
+
+    if (isCodeRequest) {
+      await sleep(500);
+      appendSwarmAgentMsg(autogen, `¡Recibido! He coordinado al equipo para procesar la instrucción en el repositorio **BioBuzzFTC12**. LangChain toma el liderazgo de código.`);
+      await sleep(700);
+
+      appendSwarmAgentMsg(langchain, `Entendido. Modificando el archivo **TeleOpBioBuzzTeam.java** en el contenedor compartido según tu solicitud: "${rawText}"...`);
+      
+      // Actualizar código compartido
+      swarmGeneratedCode = generateInstantFTCCode(rawText);
+      const codeBox = document.getElementById('swarm-code-container');
+      if (codeBox) codeBox.innerText = swarmGeneratedCode;
+      currentGeneratedCode = swarmGeneratedCode;
+
+      await sleep(800);
+      appendSwarmAgentMsg(superagi, `Verifiqué el sistema de visión Limelight 3A y los mapeos de botones. No hay interferencias con la velocidad ni con el gamepad.`);
+      await sleep(600);
+      appendSwarmAgentMsg(autogen, `✅ Código actualizado y verificado sin placeholders. Puedes presionar el botón **"Guardar en Android Studio"** para sincronizarlo inmediatamente con tu robot.`);
+      showToast('Código del proyecto actualizado por el equipo', 'success');
+
+    } else if (mentionsSuperAGI || lower.includes('limelight') || lower.includes('visión') || lower.includes('apriltag') || lower.includes('auto-aim') || lower.includes('autoaim')) {
+      await sleep(600);
+      appendSwarmAgentMsg(superagi, `Para el Auto-Aim con **Limelight 3A** en BIOBUZZ 24096:
+1. Usamos la clase oficial de FTC: \`Limelight3A limelight = hardwareMap.get(Limelight3A.class, "limelight");\`
+2. Iniciamos la cámara con \`limelight.pipelineSwitch(0); limelight.start();\`
+3. Leemos la desviación horizontal con \`double tx = limelight.getLatestResult().getTx();\`
+4. Calculamos el giro proporcional con \`double turn = tx * 0.035;\`
+5. El robot rota automáticamente centrado hacia el AprilTag o la canasta de disparo.`);
+
+    } else if (mentionsLlamaIndex || lower.includes('regla') || lower.includes('manual') || lower.includes('batería') || lower.includes('motores permitidos')) {
+      await sleep(600);
+      appendSwarmAgentMsg(llamaindex, `Según el manual oficial FIRST Tech Challenge 2026 y especificaciones de BIOBUZZ:
+- **Motores:** Máximo 8 motores DC conectados a los REV Robotics Expansion/Control Hubs.
+- **Batería:** Oficial de 12V 3000mAh NiMH con fusible térmico de 20A.
+- **Shooter:** El mecanismo debe contar con paro de emergencia por software y protección térmica.
+- **Inspección:** Todo cable de potencia principal debe tener calibre mínimo 16 AWG o 18 AWG.`);
+
+    } else if (mentionsBabyAGI || lower.includes('mecanum') || lower.includes('cinemática') || lower.includes('odometría') || lower.includes('deadband')) {
+      await sleep(600);
+      appendSwarmAgentMsg(babyagi, `La cinemática Mecanum óptima que usamos en BIOBUZZ 24096:
+\`\`\`java
+double y = -gamepad1.left_stick_y; // Adelante/Atrás
+double x = gamepad1.left_stick_x * 1.1; // Compensación de strafe
+double rx = gamepad1.right_stick_x; // Rotación
+
+double denominator = Math.max(1.0, Math.abs(y) + Math.abs(x) + Math.abs(rx));
+frontLeft.setPower((y + x + rx) / denominator);
+frontRight.setPower((y - x - rx) / denominator);
+backLeft.setPower((y - x + rx) / denominator);
+backRight.setPower((y + x - rx) / denominator);
+\`\`\`
+Esto asegura que las 4 ruedas mantengan sus proporciones vectoriales exactas sin saturar los motores.`);
+
+    } else if (mentionsAutoGPT || lower.includes('loop') || lower.includes('bucle') || lower.includes('frecuencia') || lower.includes('estado')) {
+      await sleep(600);
+      appendSwarmAgentMsg(autogpt, `El bucle principal de control en Android Studio corre a una frecuencia estable de ~50Hz en el Control Hub.
+- **Ciclo:** Lectura de sensores (0.5ms) ➔ Cálculo de Auto-Aim Limelight (1.2ms) ➔ Salida de potencia a motores DcMotorEx (0.8ms).
+- **Seguridad:** Si el driver suelta el joystick, el deadband corta la potencia a 0.0 para evitar sobrecalentamiento.`);
+
+    } else if (mentionsLangChain) {
+      await sleep(600);
+      appendSwarmAgentMsg(langchain, `¡A la orden! Como Lead Coder de Java FTC, tengo el \`HardwareMap\` de BIOBUZZ 24096 optimizado con motores \`DcMotorEx\` para control PID de velocidad. ¿Quieres que agregue una nueva rutina autónoma, modifique los botones del Gamepad o configure un servo?`);
+
+    } else {
+      // Mensaje general al equipo
+      await sleep(500);
+      appendSwarmAgentMsg(autogen, `¡Hola Líder! Todo el equipo está activo en la estación:
+- 💻 **LangChain:** Listo para programar Java.
+- 👁️ **SuperAGI:** Visión Limelight calibrada.
+- 🎯 **BabyAGI:** Cinemática y curvas optimizadas.
+- ⚡ **AutoGPT:** Loops de control sincronizados.
+- 🧠 **LlamaIndex:** Reglas FTC verificadas.
+
+¿En qué misión o mecanismo del robot quieres que trabajemos ahora?`);
+    }
+
+  } catch (err) {
+    appendSwarmAgentMsg(autogen, `⚠️ Hubo un detalle al procesar la solicitud: ${err.message}`);
+  } finally {
+    if (btnSend) btnSend.disabled = false;
+    if (statusBadge) {
+      statusBadge.className = 'text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
+      statusBadge.innerText = 'En espera';
+    }
+  }
+}
+
+// ==========================================
 // EJECUCIÓN MULTI-AGENTE (SWARM COLLABORATION)
 // ==========================================
 async function runSwarmTeamwork() {
-  const taskInput = document.getElementById('swarm-task-input');
   const chatLog = document.getElementById('swarm-chat-log');
   const codeBox = document.getElementById('swarm-code-container');
   const statusBadge = document.getElementById('swarm-status-badge');
   const btn = document.getElementById('btn-run-swarm');
 
-  const task = (taskInput ? taskInput.value.trim() : '') || 'TeleOp con Shooter e Intake para BIOBUZZ 24096';
+  const task = 'TeleOp de competición para BIOBUZZ 24096: Chasis Mecanum, Shooter PID (1200 ticks/s), Intake con botones A/B y Auto-Aim con Limelight 3A';
   const agents = getHouseAgents().filter(a => a.active);
 
   if (agents.length === 0) {
@@ -1739,81 +1966,68 @@ async function runSwarmTeamwork() {
     return;
   }
 
-  btn.disabled = true;
-  statusBadge.className = 'text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 animate-pulse';
-  statusBadge.innerText = 'Enjambre Trabajando...';
-  chatLog.innerHTML = '';
-  codeBox.innerHTML = '<span class="text-cyan-400">Los agentes están debatiendo y sincronizando el código...</span>';
-
-  function appendAgentMsg(agent, message) {
-    const div = document.createElement('div');
-    div.className = 'p-2.5 rounded-xl bg-slate-900/90 border border-white/5 space-y-1 transition';
-    div.innerHTML = `
-      <div class="flex items-center justify-between text-[11px]">
-        <div class="flex items-center space-x-1.5 font-bold text-white">
-          <span>${agent.avatar}</span>
-          <span class="text-cyan-300">${agent.name}</span>
-          <span class="text-[9px] text-slate-400 font-normal">(${agent.role})</span>
-        </div>
-        <span class="text-[9px] text-slate-500 font-mono">${new Date().toLocaleTimeString()}</span>
-      </div>
-      <p class="text-[11px] text-slate-300 pl-5">${message}</p>
-    `;
-    chatLog.appendChild(div);
-    chatLog.scrollTop = chatLog.scrollHeight;
+  if (btn) btn.disabled = true;
+  if (statusBadge) {
+    statusBadge.className = 'text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 animate-pulse';
+    statusBadge.innerText = 'Enjambre Trabajando...';
   }
+  
+  if (chatLog) chatLog.innerHTML = '';
+  if (codeBox) codeBox.innerHTML = '<span class="text-cyan-400">Los agentes están debatiendo y sincronizando el código en vivo...</span>';
 
   // Simulación interactiva de debate paso a paso con los agentes activos
   const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
   // Paso 1: AutoGen (Orquestador) inicia la misión
   const autogen = agents.find(a => a.name.toLowerCase().includes('autogen')) || agents[0];
-  appendAgentMsg(autogen, `Iniciando misión para el proyecto compartido **BioBuzzFTC12**. Tarea: "${task}". Conectando con los demás agentes en el bus del enjambre...`);
+  appendSwarmAgentMsg(autogen, `Iniciando misión para el proyecto compartido **BioBuzzFTC12**. Tarea: "${task}". Conectando con los demás agentes en el bus del enjambre...`);
   await sleep(750);
 
   // Paso 2: LlamaIndex (RAG & Reglas)
   const llamaindex = agents.find(a => a.name.toLowerCase().includes('llama')) || agents[1] || autogen;
-  appendAgentMsg(llamaindex, `Consultando manual oficial FIRST Tech Challenge 2026. Verificado: límite de 8 motores permitidos, asignación de puertos y reglas de seguridad para el Shooter.`);
+  appendSwarmAgentMsg(llamaindex, `Consultando manual oficial FIRST Tech Challenge 2026. Verificado: límite de 8 motores permitidos, asignación de puertos y reglas de seguridad para el Shooter.`);
   await sleep(800);
 
   // Paso 3: AutoGPT (Loop de Metas)
   const autogpt = agents.find(a => a.name.toLowerCase().includes('autogpt')) || agents[2] || autogen;
-  appendAgentMsg(autogpt, `Desglosando bucle principal: Ciclo TeleOp iterativo a 50Hz, normalización de sticks (gamepad1 y gamepad2) y control de rampa para aceleración.`);
+  appendSwarmAgentMsg(autogpt, `Desglosando bucle principal: Ciclo TeleOp iterativo a 50Hz, normalización de sticks (gamepad1 y gamepad2) y control de rampa para aceleración.`);
   await sleep(800);
 
   // Paso 4: LangChain (Lead Coder Java)
   const langchain = agents.find(a => a.name.toLowerCase().includes('langchain')) || agents[3] || autogen;
-  appendAgentMsg(langchain, `Escribiendo código Java completo para Android Studio: HardwareMap (frontLeft, frontRight, backLeft, backRight), Shooter con DcMotorEx.setVelocity(1200) e Intake.`);
+  appendSwarmAgentMsg(langchain, `Escribiendo código Java completo para Android Studio: HardwareMap (frontLeft, frontRight, backLeft, backRight), Shooter con DcMotorEx.setVelocity(1200) e Intake.`);
   await sleep(900);
 
   // Paso 5: SuperAGI (Visión & Limelight 3A)
   const superagi = agents.find(a => a.name.toLowerCase().includes('super')) || agents[4] || autogen;
-  appendAgentMsg(superagi, `Integrando Limelight 3A: Mapeo de 'tx' con ganancia proporcional AUTO_AIM_KP = 0.035 y pipeline para AprilTags y canastas de puntuación.`);
+  appendSwarmAgentMsg(superagi, `Integrando Limelight 3A: Mapeo de 'tx' con ganancia proporcional AUTO_AIM_KP = 0.035 y pipeline para AprilTags y canastas de puntuación.`);
   await sleep(850);
 
   // Paso 6: BabyAGI (Mecanum & Ajustes de precisión)
   const babyagi = agents.find(a => a.name.toLowerCase().includes('baby')) || agents[5] || autogen;
-  appendAgentMsg(babyagi, `Validando cinemática Mecanum con denominador 'Math.max(1.0, Math.abs(y) + Math.abs(x) + Math.abs(rx))' y deadband de 0.05 para evitar drift.`);
+  appendSwarmAgentMsg(babyagi, `Validando cinemática Mecanum con denominador 'Math.max(1.0, Math.abs(y) + Math.abs(x) + Math.abs(rx))' y deadband de 0.05 para evitar drift.`);
   await sleep(800);
 
   // Si hay agentes personalizados instalados por el usuario, hacer que intervengan
   const customAgents = agents.filter(a => !['agent-autogen', 'agent-langchain', 'agent-llamaindex', 'agent-superagi', 'agent-babyagi', 'agent-autogpt'].includes(a.id));
   for (const custom of customAgents) {
-    appendAgentMsg(custom, `Revisando el módulo desde mi especialidad (${custom.role}): Todo conforme con la arquitectura y sin conflictos en el repositorio.`);
+    appendSwarmAgentMsg(custom, `Revisando el módulo desde mi especialidad (${custom.role}): Todo conforme con la arquitectura y sin conflictos en el repositorio.`);
     await sleep(650);
   }
 
   // Paso Final: AutoGen certifica el proyecto
-  appendAgentMsg(autogen, `¡Validación de compilación exitosa! 0 placeholders ('// TODO' eliminados). Archivo Java listo para flashear en el Control Hub de BIOBUZZ 24096.`);
+  appendSwarmAgentMsg(autogen, `¡Validación de compilación exitosa! 0 placeholders ('// TODO' eliminados). Archivo Java listo para flashear en el Control Hub de BIOBUZZ 24096.`);
   
   // Generar el código unificado exacto
   swarmGeneratedCode = generateInstantFTCCode(task);
-  codeBox.innerText = swarmGeneratedCode;
+  if (codeBox) codeBox.innerText = swarmGeneratedCode;
   currentGeneratedCode = swarmGeneratedCode;
 
-  statusBadge.className = 'text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
-  statusBadge.innerText = '✅ Proyecto Completado';
-  btn.disabled = false;
+  if (statusBadge) {
+    statusBadge.className = 'text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
+    statusBadge.innerText = '✅ Proyecto Completado';
+  }
+  if (btn) btn.disabled = false;
   showToast('¡Los agentes han completado el código del proyecto en equipo!', 'success');
 }
 

@@ -165,3 +165,24 @@ code, pre, .font-mono {
   border: 1px solid rgba(6, 182, 212, 0.4);
   backdrop-filter: blur(8px);
 }
+
+.swarm-user-msg {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(30, 27, 75, 0.7) 100%);
+  border: 1px solid rgba(129, 140, 248, 0.35);
+  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.1);
+}
+
+.swarm-agent-msg {
+  background: rgba(11, 19, 38, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.tag-pill {
+  transition: all 0.2s ease;
+}
+
+.tag-pill:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.2);
+}
