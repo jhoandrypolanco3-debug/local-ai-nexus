@@ -118,6 +118,12 @@
         <span>Mapa del Ecosistema (5 Tiers)</span>
       </button>
 
+      <button onclick="switchTab('house')" id="tab-house" class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center space-x-2 transition">
+        <i data-lucide="home" class="w-4 h-4 text-amber-400"></i>
+        <span>Casa de Agentes (Swarm)</span>
+        <span id="house-agents-count" class="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-mono">4 Activos</span>
+      </button>
+
       <button onclick="switchTab('agent')" id="tab-agent" class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center space-x-2 transition">
         <i data-lucide="cpu" class="w-4 h-4 text-emerald-400"></i>
         <span>🤖 Agente Autónomo & FTC</span>
@@ -271,7 +277,202 @@
     </div>
 
     <!-- ================= VIEW 2: AGENTE AUTÓNOMO ================= -->
-    <div id="view-agent" class="hidden space-y-6">
+    
+    <!-- ================= VIEW: CASA DE AGENTES (SWARM WORKSPACE) ================= -->
+    <div id="view-house" class="hidden space-y-6">
+      
+      <!-- Cabecera de la Oficina de Agentes -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl glass-panel border border-white/10 shadow-2xl">
+        <div class="flex items-center space-x-3.5">
+          <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-cyan-600 via-amber-500 to-emerald-400 p-0.5 flex items-center justify-center shadow-lg shadow-cyan-500/20">
+            <div class="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center">
+              <i data-lucide="bot" class="w-6 h-6 text-cyan-400"></i>
+            </div>
+          </div>
+          <div>
+            <div class="flex items-center space-x-2">
+              <h2 class="text-xl font-black text-white">Oficina Virtual de Agentes (Enjambre 2026)</h2>
+              <span class="px-2.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-300 border border-cyan-500/30 text-xs font-mono font-semibold flex items-center space-x-1">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                <span>Interconectados</span>
+              </span>
+            </div>
+            <p class="text-xs text-slate-400 mt-0.5">
+              Instala frameworks y agentes (AutoGen, LangChain, LlamaIndex, SuperAGI). Trabajan y se coordinan en un mismo proyecto.
+            </p>
+          </div>
+        </div>
+
+        <div class="flex items-center space-x-3">
+          <div class="text-right hidden md:block">
+            <div class="text-[11px] text-slate-400">Proyecto Compartido:</div>
+            <div class="text-xs font-bold font-mono text-amber-400">BioBuzzFTC12 (TeamCode)</div>
+          </div>
+          <button onclick="openInstallAgentModal()" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-950 bg-gradient-to-r from-amber-400 via-orange-400 to-cyan-400 hover:from-amber-300 hover:to-cyan-300 transition shadow-lg shadow-amber-500/20 flex items-center space-x-1.5">
+            <i data-lucide="plus-circle" class="w-4 h-4"></i>
+            <span>Instalar Nuevo Agente</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- SALA VIRTUAL: PLANO CIBERNÉTICO DE LA OFICINA (Inspirado en la imagen de Agentes 2026) -->
+      <div class="cyber-floor p-6 sm:p-8 rounded-3xl border border-cyan-500/30 shadow-2xl relative overflow-hidden">
+        
+        <!-- Líneas y Conexiones de Datos en el Suelo -->
+        <svg class="absolute inset-0 w-full h-full pointer-events-none opacity-40" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="circuitGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#06b6d4" />
+              <stop offset="50%" stop-color="#f59e0b" />
+              <stop offset="100%" stop-color="#10b981" />
+            </linearGradient>
+          </defs>
+          <line x1="15%" y1="35%" x2="50%" y2="50%" stroke="url(#circuitGrad)" stroke-width="2" class="circuit-line" />
+          <line x1="85%" y1="35%" x2="50%" y2="50%" stroke="url(#circuitGrad)" stroke-width="2" class="circuit-line" />
+          <line x1="30%" y1="80%" x2="50%" y2="50%" stroke="url(#circuitGrad)" stroke-width="2" class="circuit-line" />
+          <line x1="70%" y1="80%" x2="50%" y2="50%" stroke="url(#circuitGrad)" stroke-width="2" class="circuit-line" />
+          <circle cx="50%" cy="50%" r="48" fill="none" stroke="#06b6d4" stroke-width="1.5" stroke-dasharray="6,6" class="animate-spin" style="animation-duration: 25s;" />
+        </svg>
+
+        <!-- Barra Superior de la Sala -->
+        <div class="relative z-10 flex items-center justify-between mb-6">
+          <div class="flex items-center space-x-2">
+            <span class="text-xs font-mono uppercase tracking-widest text-cyan-400 font-bold">Plano de la Casa de Agentes</span>
+            <span class="text-[11px] text-slate-500 font-mono">• 5 Estaciones de Trabajo Activas</span>
+          </div>
+          <div class="flex items-center space-x-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span class="text-xs font-mono text-emerald-400 font-bold">Bus de Comunicación Activo</span>
+          </div>
+        </div>
+
+        <!-- Grid de Estaciones de Trabajo de los Robots -->
+        <div id="house-agents-grid" class="relative z-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+          <!-- Renderizado dinámico de los agentes (AutoGen, LangChain, LlamaIndex, SuperAGI, BabyAGI) -->
+        </div>
+
+        <!-- Núcleo Central de Enjambre (Holographic Swarm Core) -->
+        <div class="relative z-10 mt-8 p-4 rounded-2xl hologram-screen flex flex-col md:flex-row items-center justify-between gap-4">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-xl bg-cyan-500/20 border border-cyan-400/40 flex items-center justify-center text-cyan-300">
+              <i data-lucide="cpu" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <h4 class="text-xs font-bold text-white uppercase tracking-wider font-mono">Núcleo de Sincronización del Proyecto</h4>
+              <p class="text-[11px] text-slate-300">Los agentes leen y modifican el mismo código de robótica en tiempo real sin pisarse.</p>
+            </div>
+          </div>
+
+          <div class="flex items-center space-x-2">
+            <button onclick="runSwarmTeamwork()" id="btn-run-swarm" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 via-amber-500 to-emerald-400 hover:from-cyan-400 hover:to-emerald-300 text-slate-950 font-black text-xs shadow-xl shadow-cyan-500/25 transition flex items-center space-x-2">
+              <i data-lucide="zap" class="w-4 h-4 fill-current"></i>
+              <span>Poner al Equipo a Construir el Robot</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Área de Trabajo Conjunto: Debate y Código Final -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- Sala de Debate de los Agentes (5 columnas) -->
+        <div class="lg:col-span-5 glass-panel p-5 rounded-2xl border border-white/10 flex flex-col h-[580px] shadow-xl">
+          <div class="pb-3 border-b border-white/10 flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+              <i data-lucide="messages-square" class="w-4 h-4 text-cyan-400"></i>
+              <h4 class="text-sm font-bold text-white">Canal de Comunicación entre Agentes</h4>
+            </div>
+            <span id="swarm-status-badge" class="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-white/5">En espera</span>
+          </div>
+
+          <!-- Log de Mensajes entre los Agentes -->
+          <div id="swarm-chat-log" class="flex-1 overflow-y-auto p-3 my-3 space-y-3 bg-black/50 rounded-xl border border-white/5 font-mono text-xs">
+            <div class="text-slate-500 text-center py-10">
+              <i data-lucide="bot" class="w-8 h-8 mx-auto mb-2 opacity-40 text-cyan-400"></i>
+              <p class="text-white font-medium text-xs">Los robots están conectados en la sala.</p>
+              <p class="text-[11px] text-slate-400 mt-1">Escribe la misión abajo y pulsa "Poner al Equipo a Construir".</p>
+            </div>
+          </div>
+
+          <!-- Input de Misión -->
+          <div class="pt-2 border-t border-white/10 space-y-2">
+            <textarea id="swarm-task-input" rows="2" class="w-full glass-input text-xs text-white p-2.5 rounded-lg resize-none" placeholder="Describe la misión del proyecto para los agentes...">TeleOp de competición para BIOBUZZ 24096: Chasis Mecanum, Shooter PID (1200 ticks/s), Intake con botones A/B y Auto-Aim con Limelight 3A</textarea>
+          </div>
+        </div>
+
+        <!-- Código del Proyecto Compartido (7 columnas) -->
+        <div class="lg:col-span-7 glass-panel p-5 rounded-2xl border border-white/10 flex flex-col h-[580px] shadow-xl">
+          <div class="pb-3 border-b border-white/10 flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+              <i data-lucide="file-code" class="w-4 h-4 text-emerald-400"></i>
+              <h4 class="text-sm font-bold text-white">Código Compartido del Proyecto</h4>
+              <span class="text-[10px] text-cyan-400 font-mono px-2 py-0.5 rounded bg-cyan-950/60 border border-cyan-500/20" id="swarm-file-badge">TeleOpShooter.java</span>
+            </div>
+            <div class="flex items-center space-x-2">
+              <button onclick="saveSwarmCodeToAndroidStudio()" class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-semibold shadow-md transition flex items-center space-x-1.5" title="Guardar directamente en TeamCode de Android Studio">
+                <i data-lucide="folder-down" class="w-3.5 h-3.5"></i>
+                <span>Guardar en Android Studio</span>
+              </button>
+              <button onclick="copySwarmCode()" class="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition" title="Copiar código">
+                <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Contenedor del Código -->
+          <div id="swarm-code-container" class="flex-1 mt-3 bg-black/70 rounded-xl p-4 overflow-auto font-mono text-xs text-slate-200 border border-white/5 whitespace-pre-wrap">
+            <span class="text-slate-500">// El código generado colaborativamente aparecerá aquí...</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    
+    <!-- Modal para Instalar Nuevo Agente -->
+    <div id="install-agent-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+      <div class="glass-panel w-full max-w-md p-6 rounded-3xl border border-white/10 shadow-2xl relative">
+        <button onclick="closeInstallAgentModal()" class="absolute top-5 right-5 text-slate-400 hover:text-white p-1 rounded-lg">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+
+        <div class="text-center mb-6">
+          <div class="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mx-auto mb-3">
+            <i data-lucide="user-plus" class="w-6 h-6 text-amber-400"></i>
+          </div>
+          <h3 class="text-xl font-bold text-white">Instalar Nuevo Agente en la Casa</h3>
+          <p class="text-xs text-slate-400 mt-1">Personaliza el rol y modelo del nuevo miembro del equipo</p>
+        </div>
+
+        <form id="install-agent-form" onsubmit="handleInstallAgent(event)" class="space-y-3.5">
+          <div>
+            <label class="block text-xs font-medium text-slate-300 mb-1">Nombre del Agente</label>
+            <input type="text" id="new-agent-name" required placeholder="Ej: Carlos" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-white/10 text-white text-xs focus:outline-none focus:border-amber-400">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-300 mb-1">Rol / Especialidad</label>
+            <input type="text" id="new-agent-role" required placeholder="Ej: Especialista en Brazos y Servos" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-white/10 text-white text-xs focus:outline-none focus:border-amber-400">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-300 mb-1">Modelo de IA que utilizará</label>
+            <select id="new-agent-model" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-white/10 text-white text-xs focus:outline-none focus:border-amber-400">
+              <option value="turbo-biobuzz">⚡ Modo Turbo BioBuzz (< 0.1s)</option>
+              <option value="neoia-cloud">☁️ NeoIA Cloud (DeepSeek GPU)</option>
+              <option value="llama3.2:1b">🧠 llama3.2:1b (Local)</option>
+              <option value="qwen2.5-coder:1.5b">💻 qwen2.5-coder:1.5b (Local FTC)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-300 mb-1">Instrucciones / Especialidad del Agente</label>
+            <textarea id="new-agent-desc" rows="2" placeholder="Ej: Supervisa el rango de movimiento de los servomotores y asegura límites de corriente..." class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-white/10 text-white text-xs focus:outline-none focus:border-amber-400 resize-none"></textarea>
+          </div>
+
+          <button type="submit" class="w-full py-2.5 rounded-xl text-xs font-bold text-slate-950 bg-gradient-to-r from-amber-400 to-orange-400 hover:from-amber-300 hover:to-orange-300 transition shadow-lg shadow-amber-500/20">
+            Instalar Agente en la Casa
+          </button>
+        </form>
+      </div>
+    </div>
+<div id="view-agent" class="hidden space-y-6">
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 class="text-xl font-bold text-white flex items-center gap-2">
