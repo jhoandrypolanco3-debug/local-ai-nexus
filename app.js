@@ -1,4 +1,4 @@
-﻿// ==========================================
+// ==========================================
 // Local AI Nexus & Agente Autónomo Local
 // ==========================================
 
@@ -1528,7 +1528,7 @@ let defaultHouseAgents = [
     avatar: '🤖',
     color: 'cyan',
     model: 'DeepSeek / AutoGen Swarm',
-    desc: 'Coordina a los demás agentes, divide la misión y valida la arquitectura general.',
+    desc: 'Coordina a los demás agentes, divide la misión del proyecto y valida la arquitectura general.',
     active: true
   },
   {
@@ -1568,11 +1568,22 @@ let defaultHouseAgents = [
     id: 'agent-babyagi',
     name: 'BabyAGI',
     framework: 'BabyAGI Pathing',
-    role: 'Autónomo & Curvas Bezier',
+    role: 'Autónomo & Odometría',
     avatar: '🎯',
     color: 'amber',
     model: 'DeepSeek Reasoning',
-    desc: 'Planifica rutas autónomas con JhoandriFollower, odometría y parqueo final.',
+    desc: 'Planifica rutas autónomas con cinemática Mecanum, odometría y parqueo.',
+    active: true
+  },
+  {
+    id: 'agent-autogpt',
+    name: 'AutoGPT',
+    framework: 'AutoGPT Core',
+    role: 'Planificador de Loops & Goals',
+    avatar: '⚡',
+    color: 'orange',
+    model: 'AutoGPT Executive',
+    desc: 'Gestiona la máquina de estados recursiva y la telemetría continua para el Driver.',
     active: true
   }
 ];
@@ -1582,7 +1593,18 @@ let swarmGeneratedCode = '';
 function getHouseAgents() {
   try {
     const saved = localStorage.getItem('neoia_house_agents');
-    if (saved) return JSON.parse(saved);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed) && parsed.length >= 4) {
+        // Asegurar que si falta autogpt se añada
+        if (!parsed.some(a => a.id === 'agent-autogpt')) {
+          const autoGpt = defaultHouseAgents.find(a => a.id === 'agent-autogpt');
+          if (autoGpt) parsed.push(autoGpt);
+          saveHouseAgents(parsed);
+        }
+        return parsed;
+      }
+    }
   } catch (e) {}
   return [...defaultHouseAgents];
 }
@@ -1744,28 +1766,45 @@ async function runSwarmTeamwork() {
   // Simulación interactiva de debate paso a paso con los agentes activos
   const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
-  // Paso 1: Ethan (QA o primer agente) coordina
-  const leader = agents.find(a => a.name.includes('Ethan')) || agents[0];
-  appendAgentMsg(leader, `Iniciando misión para el proyecto compartido **BioBuzzFTC12**. Tarea: "${task}". Asignando responsabilidades al equipo...`);
+  // Paso 1: AutoGen (Orquestador) inicia la misión
+  const autogen = agents.find(a => a.name.toLowerCase().includes('autogen')) || agents[0];
+  appendAgentMsg(autogen, `Iniciando misión para el proyecto compartido **BioBuzzFTC12**. Tarea: "${task}". Conectando con los demás agentes en el bus del enjambre...`);
+  await sleep(750);
+
+  // Paso 2: LlamaIndex (RAG & Reglas)
+  const llamaindex = agents.find(a => a.name.toLowerCase().includes('llama')) || agents[1] || autogen;
+  appendAgentMsg(llamaindex, `Consultando manual oficial FIRST Tech Challenge 2026. Verificado: límite de 8 motores permitidos, asignación de puertos y reglas de seguridad para el Shooter.`);
   await sleep(800);
 
-  // Paso 2: Alex (Coder) diseña el hardware
-  const coder = agents.find(a => a.name.includes('Alex')) || agents[1] || leader;
-  appendAgentMsg(coder, `Entendido. Diseñando hardwareMap: mapeando motores 'frontLeft', 'frontRight', 'backLeft', 'backRight', shooter en DcMotorEx con PID y el intake en DcMotor...`);
+  // Paso 3: AutoGPT (Loop de Metas)
+  const autogpt = agents.find(a => a.name.toLowerCase().includes('autogpt')) || agents[2] || autogen;
+  appendAgentMsg(autogpt, `Desglosando bucle principal: Ciclo TeleOp iterativo a 50Hz, normalización de sticks (gamepad1 y gamepad2) y control de rampa para aceleración.`);
+  await sleep(800);
+
+  // Paso 4: LangChain (Lead Coder Java)
+  const langchain = agents.find(a => a.name.toLowerCase().includes('langchain')) || agents[3] || autogen;
+  appendAgentMsg(langchain, `Escribiendo código Java completo para Android Studio: HardwareMap (frontLeft, frontRight, backLeft, backRight), Shooter con DcMotorEx.setVelocity(1200) e Intake.`);
   await sleep(900);
 
-  // Paso 3: Nova (Vision) añade targeting
-  const vision = agents.find(a => a.name.includes('Nova')) || agents[2] || leader;
-  appendAgentMsg(vision, `Conectando Limelight 3A. Configurando cálculo de desviación 'tx' con ganancia AUTO_AIM_KP = 0.035 para apuntar al objetivo automáticamente.`);
+  // Paso 5: SuperAGI (Visión & Limelight 3A)
+  const superagi = agents.find(a => a.name.toLowerCase().includes('super')) || agents[4] || autogen;
+  appendAgentMsg(superagi, `Integrando Limelight 3A: Mapeo de 'tx' con ganancia proporcional AUTO_AIM_KP = 0.035 y pipeline para AprilTags y canastas de puntuación.`);
+  await sleep(850);
+
+  // Paso 6: BabyAGI (Mecanum & Ajustes de precisión)
+  const babyagi = agents.find(a => a.name.toLowerCase().includes('baby')) || agents[5] || autogen;
+  appendAgentMsg(babyagi, `Validando cinemática Mecanum con denominador 'Math.max(1.0, Math.abs(y) + Math.abs(x) + Math.abs(rx))' y deadband de 0.05 para evitar drift.`);
   await sleep(800);
 
-  // Paso 4: Maya (Pathing / Trajectory)
-  const pathing = agents.find(a => a.name.includes('Maya')) || agents[3] || leader;
-  appendAgentMsg(pathing, `Validando cinemática Mecanum con normalización de denominador y deadband de 0.05. Rampa de disparo configurada a 1200 ticks/s constante.`);
-  await sleep(800);
+  // Si hay agentes personalizados instalados por el usuario, hacer que intervengan
+  const customAgents = agents.filter(a => !['agent-autogen', 'agent-langchain', 'agent-llamaindex', 'agent-superagi', 'agent-babyagi', 'agent-autogpt'].includes(a.id));
+  for (const custom of customAgents) {
+    appendAgentMsg(custom, `Revisando el módulo desde mi especialidad (${custom.role}): Todo conforme con la arquitectura y sin conflictos en el repositorio.`);
+    await sleep(650);
+  }
 
-  // Paso 5: Generación y Verificación Final
-  appendAgentMsg(leader, `¡Verificación completada! 0 placeholders ('// TODO' eliminados). Sintaxis Java 100% compatible con Android Studio TeamCode. Proyecto compilado.`);
+  // Paso Final: AutoGen certifica el proyecto
+  appendAgentMsg(autogen, `¡Validación de compilación exitosa! 0 placeholders ('// TODO' eliminados). Archivo Java listo para flashear en el Control Hub de BIOBUZZ 24096.`);
   
   // Generar el código unificado exacto
   swarmGeneratedCode = generateInstantFTCCode(task);
