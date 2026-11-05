@@ -2075,6 +2075,16 @@ function clearSwarmChat() {
   showToast('Chat de la casa de agentes limpiado.', 'info');
 }
 
+function escapeHtml(text) {
+  if (!text) return '';
+  return String(text)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 function handleSwarmChatKeydown(e) {
   if (e.key === 'Enter' && !e.shiftKey) {
     e.preventDefault();
@@ -2153,32 +2163,34 @@ async function handleSwarmChatSubmit(event) {
     statusBadge.innerText = 'Agentes pensando...';
   }
 
-  const agents = getHouseAgents().filter(a => a.active);
-  const autogen = agents.find(a => a.name.toLowerCase().includes('autogen')) || agents[0];
-  const langchain = agents.find(a => a.name.toLowerCase().includes('langchain')) || agents[1] || autogen;
-  const llamaindex = agents.find(a => a.name.toLowerCase().includes('llama')) || agents[2] || autogen;
-  const superagi = agents.find(a => a.name.toLowerCase().includes('super')) || agents[3] || autogen;
-  const babyagi = agents.find(a => a.name.toLowerCase().includes('baby')) || agents[4] || autogen;
-  const autogpt = agents.find(a => a.name.toLowerCase().includes('autogpt')) || agents[5] || autogen;
+  const agents = (getHouseAgents() && getHouseAgents().length) ? getHouseAgents() : defaultHouseAgents;
+  const autogen = agents.find(a => a.name.toLowerCase().includes('autogen')) || defaultHouseAgents[0];
+  const langchain = agents.find(a => a.name.toLowerCase().includes('langchain')) || defaultHouseAgents[1];
+  const llamaindex = agents.find(a => a.name.toLowerCase().includes('llama')) || defaultHouseAgents[2];
+  const superagi = agents.find(a => a.name.toLowerCase().includes('super')) || defaultHouseAgents[3];
+  const babyagi = agents.find(a => a.name.toLowerCase().includes('baby')) || defaultHouseAgents[4];
+  const autogpt = agents.find(a => a.name.toLowerCase().includes('autogpt')) || defaultHouseAgents[5];
+  const safetyAgent = { id: 'agent-safety', name: 'Safety Agent', avatar: '🛡️', framework: 'NeoIA Safety Guard', role: 'Paradas & Límites' };
 
   const lower = rawText.toLowerCase();
   const sleep = ms => new Promise(r => setTimeout(r, ms));
 
   try {
     // 1. Detección de Mención Directa
-    const mentionsLangChain = lower.includes('@langchain');
-    const mentionsSuperAGI = lower.includes('@superagi');
-    const mentionsBabyAGI = lower.includes('@babyagi');
-    const mentionsLlamaIndex = lower.includes('@llamaindex');
-    const mentionsAutoGPT = lower.includes('@autogpt');
-    const mentionsAutoGen = lower.includes('@autogen');
+    const mentionsLangChain = lower.includes('@langchain') || lower.includes('@coding');
+    const mentionsSuperAGI = lower.includes('@superagi') || lower.includes('@hardware');
+    const mentionsBabyAGI = lower.includes('@babyagi') || lower.includes('@optimization');
+    const mentionsLlamaIndex = lower.includes('@llamaindex') || lower.includes('@reviewer');
+    const mentionsAutoGPT = lower.includes('@autogpt') || lower.includes('@testing');
+    const mentionsAutoGen = lower.includes('@autogen') || lower.includes('@architect');
+    const mentionsSafety = lower.includes('@safety') || lower.includes('seguridad') || lower.includes('parada') || lower.includes('paro') || lower.includes('fusible');
     const mentionsTodos = lower.includes('@todos');
 
     // 2. ¿Petición de generación o ajuste de código?
-    const isCodeRequest = lower.includes('código') || lower.includes('teleop') || lower.includes('autónomo') || 
-                          lower.includes('shooter') || lower.includes('intake') || lower.includes('modifica') || 
-                          lower.includes('cambia') || lower.includes('crea') || lower.includes('agrega') || 
-                          lower.includes('construye') || lower.includes('haz');
+    const isCodeRequest = lower.includes('código') || lower.includes('codigo') || lower.includes('teleop') || 
+                          lower.includes('autónomo') || lower.includes('autonomo') || lower.includes('shooter') || 
+                          lower.includes('intake') || lower.includes('modifica') || lower.includes('cambia') || 
+                          lower.includes('crea') || lower.includes('agrega') || lower.includes('construye') || lower.includes('haz');
 
     if (isCodeRequest) {
       showSwarmTyping(autogen);
@@ -2219,7 +2231,17 @@ async function handleSwarmChatSubmit(event) {
       appendSwarmAgentMsg(autogen, `✅ Código actualizado y verificado sin placeholders. Puedes presionar el botón **"Guardar en Android Studio"** para sincronizarlo inmediatamente con tu robot.`);
       showToast('Código del proyecto actualizado por el equipo', 'success');
 
-    } else if (mentionsSuperAGI || lower.includes('limelight') || lower.includes('visión') || lower.includes('apriltag') || lower.includes('auto-aim') || lower.includes('autoaim')) {
+    } else if (mentionsSafety) {
+      showSwarmTyping(safetyAgent);
+      await sleep(700);
+      hideSwarmTyping();
+      playSciFiBeep('receive');
+      appendSwarmAgentMsg(safetyAgent, `🛡️ **Safety Agent:** El protocolo de seguridad de BIOBUZZ 24096 incluye:
+1. Paro inmediato con \`!opModeIsActive()\` al soltar el Driver Station.
+2. Detección de atascamientos en el Intake (anti-stall reverse).
+3. Fusible de 20A protegido mediante rampa suave en el Shooter con \`DcMotorEx.setVelocity()\`.`);
+
+    } else if (mentionsSuperAGI || lower.includes('limelight') || lower.includes('visión') || lower.includes('vision') || lower.includes('apriltag') || lower.includes('auto-aim') || lower.includes('autoaim')) {
       showSwarmTyping(superagi);
       await sleep(750);
       hideSwarmTyping();
@@ -2239,7 +2261,7 @@ async function handleSwarmChatSubmit(event) {
         appendSwarmAgentMsg(babyagi, `Añado a lo que dice SuperAGI: Al aplicar el giro \`turn\` del auto-aim, aplicamos una banda de tolerancia de 1.0° para que el chasis Mecanum no oscile.`);
       }
 
-    } else if (mentionsLlamaIndex || lower.includes('regla') || lower.includes('manual') || lower.includes('batería') || lower.includes('motores permitidos')) {
+    } else if (mentionsLlamaIndex || lower.includes('regla') || lower.includes('manual') || lower.includes('batería') || lower.includes('bateria') || lower.includes('motores permitidos')) {
       showSwarmTyping(llamaindex);
       await sleep(750);
       hideSwarmTyping();
@@ -2250,7 +2272,7 @@ async function handleSwarmChatSubmit(event) {
 - **Shooter:** El mecanismo debe contar con paro de emergencia por software y protección térmica.
 - **Inspección:** Todo cable de potencia principal debe tener calibre mínimo 16 AWG o 18 AWG.`);
 
-    } else if (mentionsBabyAGI || lower.includes('mecanum') || lower.includes('cinemática') || lower.includes('odometría') || lower.includes('deadband')) {
+    } else if (mentionsBabyAGI || lower.includes('mecanum') || lower.includes('cinemática') || lower.includes('cinematica') || lower.includes('odometría') || lower.includes('deadband')) {
       showSwarmTyping(babyagi);
       await sleep(750);
       hideSwarmTyping();
@@ -2300,11 +2322,13 @@ Esto asegura que las 4 ruedas mantengan sus proporciones vectoriales exactas sin
       hideSwarmTyping();
       playSciFiBeep('receive');
       appendSwarmAgentMsg(autogen, `¡Hola Líder! Todo el equipo está activo en la estación:
-- 💻 **LangChain:** Listo para programar Java.
-- 👁️ **SuperAGI:** Visión Limelight calibrada.
-- 🎯 **BabyAGI:** Cinemática y curvas optimizadas.
-- ⚡ **AutoGPT:** Loops de control sincronizados.
-- 🧠 **LlamaIndex:** Reglas FTC verificadas.
+- 🧠 **Architect Agent (AutoGen):** Estrategia y diseño modular.
+- 💻 **Coding Agent (LangChain):** Programación Java FTC.
+- 🔍 **Code Reviewer (LlamaIndex):** Auditoría y reglas FTC.
+- 🛡️ **Safety Agent:** Paradas de emergencia y límites de corriente.
+- ⚙️ **Hardware Agent (SuperAGI):** HardwareMap y Limelight 3A.
+- 🧪 **Testing Agent (AutoGPT):** Simulación a 50Hz.
+- 🚀 **Optimization Agent (BabyAGI):** Cinemática Mecanum y precisión.
 
 ¿En qué misión o mecanismo del robot quieres que trabajemos ahora?`);
 
