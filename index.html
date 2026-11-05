@@ -353,68 +353,98 @@
           </div>
         </div>
 
-        <!-- FOTO REAL DEL CUARTEL CON OVERLAYS INTERACTIVOS (Exactamente la Foto) -->
-        <div class="relative rounded-2xl overflow-hidden border border-cyan-500/30 shadow-2xl group">
-          <img src="/agent-house-hq.jpg" alt="Cuartel Central de Agentes 2026" class="w-full h-[320px] sm:h-[400px] md:h-[460px] object-cover object-center filter brightness-95 group-hover:brightness-100 transition duration-500">
+        <!-- FOTO REAL DEL CUARTEL CON OVERLAYS INTERACTIVOS Y MOVIMIENTO (Exactamente la Foto) -->
+        <div class="relative rounded-2xl overflow-hidden border border-cyan-500/30 shadow-2xl group select-none">
+          <img src="/agent-house-hq.jpg" alt="Cuartel Central de Agentes 2026" class="w-full h-[340px] sm:h-[420px] md:h-[480px] object-cover object-center filter brightness-95 group-hover:brightness-100 transition duration-500">
           
           <!-- Capa de Gradiente Holográfica -->
-          <div class="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-slate-950/30 pointer-events-none"></div>
+          <div class="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-transparent to-slate-950/25 pointer-events-none"></div>
 
-          <!-- Hotspots Interactivos sobre los Robots de la Foto -->
+          <!-- Rayo Láser Central que baja del techo -->
+          <div class="laser-pillar"></div>
+
+          <!-- Ondas de choque en el apretón de manos central -->
+          <div style="top: 55%; left: 50%;" class="absolute pointer-events-none z-10">
+            <div class="energy-ripple"></div>
+            <div class="energy-ripple"></div>
+            <div class="energy-ripple"></div>
+          </div>
+
+          <!-- Líneas de Circuito Animadas sobre el Suelo de la Foto -->
+          <svg class="photo-circuit-svg" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="photoCircuitGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#06b6d4" />
+                <stop offset="50%" stop-color="#f59e0b" />
+                <stop offset="100%" stop-color="#10b981" />
+              </linearGradient>
+            </defs>
+            <!-- Líneas de datos que van desde el centro hacia los robots -->
+            <line x1="50%" y1="55%" x2="12%" y2="28%" stroke="url(#photoCircuitGrad)" stroke-width="2.5" class="floor-data-stream opacity-70" />
+            <line x1="50%" y1="55%" x2="27%" y2="30%" stroke="url(#photoCircuitGrad)" stroke-width="2.5" class="floor-data-stream opacity-70" />
+            <line x1="50%" y1="55%" x2="43%" y2="28%" stroke="url(#photoCircuitGrad)" stroke-width="2.5" class="floor-data-stream opacity-70" />
+            <line x1="50%" y1="55%" x2="54%" y2="28%" stroke="url(#photoCircuitGrad)" stroke-width="2.5" class="floor-data-stream opacity-70" />
+            <line x1="50%" y1="55%" x2="69%" y2="30%" stroke="url(#photoCircuitGrad)" stroke-width="2.5" class="floor-data-stream opacity-70" />
+            <line x1="50%" y1="55%" x2="88%" y2="30%" stroke="url(#photoCircuitGrad)" stroke-width="2.5" class="floor-data-stream opacity-70" />
+            <line x1="50%" y1="55%" x2="22%" y2="68%" stroke="url(#photoCircuitGrad)" stroke-width="2" class="floor-data-stream opacity-60" />
+            <line x1="50%" y1="55%" x2="82%" y2="65%" stroke="url(#photoCircuitGrad)" stroke-width="2" class="floor-data-stream opacity-60" />
+          </svg>
+
+          <!-- Hotspots Interactivos con Animación de Movimiento (Floating & Scanner) -->
           <!-- 1. LangChain (Coding Agent) -->
-          <div onclick="clickRobotPod('LangChain', 'agent-langchain')" style="top: 22%; left: 12%;" class="hq-hotspot flex flex-col items-center group/hs" title="LangChain - Coding Agent">
-            <span class="w-3.5 h-3.5 rounded-full bg-emerald-400 hotspot-glow border border-white"></span>
-            <span class="mt-1 px-2 py-0.5 rounded-md bg-slate-950/90 text-emerald-300 font-mono text-[10px] font-bold border border-emerald-500/50 backdrop-blur-md shadow-lg group-hover/hs:scale-110 transition">
+          <div onclick="clickRobotPod('LangChain', 'agent-langchain')" style="top: 22%; left: 12%;" class="hq-hotspot robot-floating flex flex-col items-center group/hs" title="Haz clic para activar a LangChain">
+            <span class="w-4 h-4 rounded-full bg-emerald-400 hotspot-glow border-2 border-white"></span>
+            <span class="mt-1 px-2.5 py-1 rounded-lg bg-slate-950/90 text-emerald-300 font-mono text-[10px] font-bold border border-emerald-500/50 backdrop-blur-md shadow-xl hud-scanner group-hover/hs:scale-115 transition">
               💻 LangChain (Coding)
             </span>
           </div>
 
           <!-- 2. AutoGen (Architect Agent) -->
-          <div onclick="clickRobotPod('AutoGen', 'agent-autogen')" style="top: 24%; left: 27%;" class="hq-hotspot flex flex-col items-center group/hs" title="AutoGen - Architect Agent">
-            <span class="w-3.5 h-3.5 rounded-full bg-cyan-400 hotspot-glow border border-white"></span>
-            <span class="mt-1 px-2 py-0.5 rounded-md bg-slate-950/90 text-cyan-300 font-mono text-[10px] font-bold border border-cyan-500/50 backdrop-blur-md shadow-lg group-hover/hs:scale-110 transition">
+          <div onclick="clickRobotPod('AutoGen', 'agent-autogen')" style="top: 24%; left: 27%;" class="hq-hotspot robot-floating-alt flex flex-col items-center group/hs" title="Haz clic para activar a AutoGen">
+            <span class="w-4 h-4 rounded-full bg-cyan-400 hotspot-glow border-2 border-white"></span>
+            <span class="mt-1 px-2.5 py-1 rounded-lg bg-slate-950/90 text-cyan-300 font-mono text-[10px] font-bold border border-cyan-500/50 backdrop-blur-md shadow-xl hud-scanner group-hover/hs:scale-115 transition">
               🧠 AutoGen (Architect)
             </span>
           </div>
 
           <!-- 3. BabyAGI (Optimization Agent) -->
-          <div onclick="clickRobotPod('BabyAGI', 'agent-babyagi')" style="top: 21%; left: 43%;" class="hq-hotspot flex flex-col items-center group/hs" title="BabyAGI - Optimization Agent">
-            <span class="w-3.5 h-3.5 rounded-full bg-amber-400 hotspot-glow border border-white"></span>
-            <span class="mt-1 px-2 py-0.5 rounded-md bg-slate-950/90 text-amber-300 font-mono text-[10px] font-bold border border-amber-500/50 backdrop-blur-md shadow-lg group-hover/hs:scale-110 transition">
+          <div onclick="clickRobotPod('BabyAGI', 'agent-babyagi')" style="top: 21%; left: 43%;" class="hq-hotspot robot-floating flex flex-col items-center group/hs" title="Haz clic para activar a BabyAGI">
+            <span class="w-4 h-4 rounded-full bg-amber-400 hotspot-glow border-2 border-white"></span>
+            <span class="mt-1 px-2.5 py-1 rounded-lg bg-slate-950/90 text-amber-300 font-mono text-[10px] font-bold border border-amber-500/50 backdrop-blur-md shadow-xl hud-scanner group-hover/hs:scale-115 transition">
               🚀 BabyAGI (Optimization)
             </span>
           </div>
 
           <!-- 4. SuperAGI (Hardware & Vision Agent) -->
-          <div onclick="clickRobotPod('SuperAGI', 'agent-superagi')" style="top: 21%; left: 54%;" class="hq-hotspot flex flex-col items-center group/hs" title="SuperAGI - Hardware Agent">
-            <span class="w-3.5 h-3.5 rounded-full bg-purple-400 hotspot-glow border border-white"></span>
-            <span class="mt-1 px-2 py-0.5 rounded-md bg-slate-950/90 text-purple-300 font-mono text-[10px] font-bold border border-purple-500/50 backdrop-blur-md shadow-lg group-hover/hs:scale-110 transition">
+          <div onclick="clickRobotPod('SuperAGI', 'agent-superagi')" style="top: 21%; left: 54%;" class="hq-hotspot robot-floating-alt flex flex-col items-center group/hs" title="Haz clic para activar a SuperAGI">
+            <span class="w-4 h-4 rounded-full bg-purple-400 hotspot-glow border-2 border-white"></span>
+            <span class="mt-1 px-2.5 py-1 rounded-lg bg-slate-950/90 text-purple-300 font-mono text-[10px] font-bold border border-purple-500/50 backdrop-blur-md shadow-xl hud-scanner group-hover/hs:scale-115 transition">
               ⚙️ SuperAGI (Hardware)
             </span>
           </div>
 
           <!-- 5. AutoGPT (Testing Agent) -->
-          <div onclick="clickRobotPod('AutoGPT', 'agent-autogpt')" style="top: 23%; left: 69%;" class="hq-hotspot flex flex-col items-center group/hs" title="AutoGPT - Testing Agent">
-            <span class="w-3.5 h-3.5 rounded-full bg-orange-400 hotspot-glow border border-white"></span>
-            <span class="mt-1 px-2 py-0.5 rounded-md bg-slate-950/90 text-orange-300 font-mono text-[10px] font-bold border border-orange-500/50 backdrop-blur-md shadow-lg group-hover/hs:scale-110 transition">
+          <div onclick="clickRobotPod('AutoGPT', 'agent-autogpt')" style="top: 23%; left: 69%;" class="hq-hotspot robot-floating flex flex-col items-center group/hs" title="Haz clic para activar a AutoGPT">
+            <span class="w-4 h-4 rounded-full bg-orange-400 hotspot-glow border-2 border-white"></span>
+            <span class="mt-1 px-2.5 py-1 rounded-lg bg-slate-950/90 text-orange-300 font-mono text-[10px] font-bold border border-orange-500/50 backdrop-blur-md shadow-xl hud-scanner group-hover/hs:scale-115 transition">
               🧪 AutoGPT (Testing)
             </span>
           </div>
 
           <!-- 6. LlamaIndex (Code Reviewer & Reglas) -->
-          <div onclick="clickRobotPod('LlamaIndex', 'agent-llamaindex')" style="top: 23%; left: 88%;" class="hq-hotspot flex flex-col items-center group/hs" title="LlamaIndex - Code Reviewer">
-            <span class="w-3.5 h-3.5 rounded-full bg-indigo-400 hotspot-glow border border-white"></span>
-            <span class="mt-1 px-2 py-0.5 rounded-md bg-slate-950/90 text-indigo-300 font-mono text-[10px] font-bold border border-indigo-500/50 backdrop-blur-md shadow-lg group-hover/hs:scale-110 transition">
+          <div onclick="clickRobotPod('LlamaIndex', 'agent-llamaindex')" style="top: 23%; left: 88%;" class="hq-hotspot robot-floating-alt flex flex-col items-center group/hs" title="Haz clic para activar a LlamaIndex">
+            <span class="w-4 h-4 rounded-full bg-indigo-400 hotspot-glow border-2 border-white"></span>
+            <span class="mt-1 px-2.5 py-1 rounded-lg bg-slate-950/90 text-indigo-300 font-mono text-[10px] font-bold border border-indigo-500/50 backdrop-blur-md shadow-xl hud-scanner group-hover/hs:scale-115 transition">
               🔍 LlamaIndex (Reviewer)
             </span>
           </div>
 
           <!-- Handshake Central (Swarm Core) -->
-          <div onclick="runMultiAgentPipeline()" style="top: 55%; left: 50%;" class="hq-hotspot flex flex-col items-center group/hs cursor-pointer" title="Colaboración en vivo en el mismo proyecto">
-            <span class="w-4 h-4 rounded-full bg-cyan-300 hotspot-glow border-2 border-white"></span>
-            <span class="mt-1 px-2.5 py-0.5 rounded-md bg-black/90 text-cyan-300 font-mono text-[10px] font-extrabold border border-cyan-400 backdrop-blur-md shadow-xl group-hover/hs:scale-110 transition flex items-center space-x-1">
+          <div onclick="runMultiAgentPipeline()" style="top: 55%; left: 50%;" class="hq-hotspot robot-floating flex flex-col items-center group/hs cursor-pointer" title="Haz clic para poner a todos los robots a colaborar">
+            <span class="w-5 h-5 rounded-full bg-cyan-300 hotspot-glow border-2 border-white"></span>
+            <span class="mt-1 px-3 py-1 rounded-lg bg-black/95 text-cyan-300 font-mono text-[11px] font-extrabold border border-cyan-400 backdrop-blur-md shadow-2xl group-hover/hs:scale-115 transition flex items-center space-x-1.5">
               <span>🤝</span>
-              <span>Enjambre en Acción</span>
+              <span>¡Colaboración en Vivo!</span>
             </span>
           </div>
         </div>
@@ -1068,6 +1098,6 @@
 
   <div id="toast-container" class="fixed bottom-4 right-4 z-50 space-y-2 pointer-events-none"></div>
 
-  <script src="app.js?v=photo_pipeline_v3"></script>
+  <script src="app.js?v=motion_active_v4"></script>
 </body>
 </html>

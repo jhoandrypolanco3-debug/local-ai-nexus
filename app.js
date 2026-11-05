@@ -141,6 +141,7 @@ document.addEventListener('DOMContentLoaded', () => {
   updateStorageMeter();
   initSpeechRecognition();
   renderDefaultDiagram();
+  if (typeof switchSwarmFile === 'function') switchSwarmFile('teleop');
   lucide.createIcons();
 });
 
@@ -1709,10 +1710,42 @@ function toggleSwarmMicrophone() {
 }
 
 function clickRobotPod(name, id) {
-  playSciFiBeep('send');
+  activateAgentFromPhoto(name, id);
+}
+
+function activateAgentFromPhoto(name, id) {
+  playSciFiBeep('receive');
   tagSwarmAgent(`@${name}`);
   highlightActiveSpeaker(id);
-  setTimeout(clearActiveSpeaker, 2500);
+
+  const agents = getHouseAgents();
+  const agent = agents.find(a => a.name.toLowerCase().includes(name.toLowerCase())) || {
+    id: id,
+    name: name,
+    avatar: '🤖',
+    role: 'Agente Especialista'
+  };
+
+  showSwarmTyping(agent);
+  setTimeout(() => {
+    hideSwarmTyping();
+    playSciFiBeep('receive');
+
+    const responses = {
+      langchain: '💻 **LangChain (Coding Agent):** ¡Aquí estoy! Listo para programar tu robot en Java FTC. Puedo generar el OpMode Mecanum completo con normalización de denominador, el control PID del Shooter a 1200 ticks/s o el sistema de Intake con botones A/B. ¿Quieres que lo escriba?',
+      autogen: '🧠 **AutoGen (Architect Agent):** ¡A la orden! Como arquitecto, superviso la estructura modular de **BioBuzzFTC12**. Puedo coordinar a los 7 agentes para validar estrategia, paradas de emergencia y rendimiento.',
+      superagi: '⚙️ **SuperAGI (Hardware & Vision Agent):** ¡Visión artificial activa! Tengo calibrada la **Limelight 3A** con auto-aim (`AUTO_AIM_KP = 0.035`) y detección de AprilTags. También reviso los nombres y puertos en el `hardwareMap`.',
+      babyagi: '🚀 **BabyAGI (Optimization Agent):** ¡Optimizador listo! Aplico cinemática Mecanum con normalización de denominador `Math.max(1.0, ...)` y curvas de rampa para aceleración suave en competencia.',
+      autogpt: '🧪 **AutoGPT (Testing Agent):** ¡Monitor de pruebas listo! Ejecuto simulaciones del bucle a 50Hz en el Control Hub y compruebo que la telemetría en el Driver Station responda en menos de 20ms.',
+      llamaindex: '🔍 **LlamaIndex (Code Reviewer):** ¡Auditoría activa! Verifico que no haya ningún placeholder `// TODO`, que los motores respeten el límite de 8 unidades y que la batería no sobrepase los 20A oficiales.'
+    };
+
+    const key = name.toLowerCase();
+    const msg = responses[key] || `🤖 **${name}:** ¡Estación activada y en línea! Conectado al bus del enjambre para el proyecto **BioBuzzFTC12**. ¿Qué deseas que analice?`;
+
+    appendSwarmAgentMsg(agent, msg);
+    showToast(`Agente ${name} activado en la sala`, 'success');
+  }, 450);
 }
 
 function highlightActiveSpeaker(id) {

@@ -187,27 +187,129 @@ code, pre, .font-mono {
   40% { transform: scale(1); opacity: 1; }
 }
 
-/* Hotspots interactivos sobre la foto del Cuartel */
+/* Hotspots interactivos sobre la foto del Cuartel con Movimiento Real */
 .hq-hotspot {
   position: absolute;
   cursor: pointer;
   transform: translate(-50%, -50%);
-  transition: all 0.25s ease;
-  z-index: 20;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 25;
 }
 
 .hq-hotspot:hover {
-  transform: translate(-50%, -50%) scale(1.15);
+  transform: translate(-50%, -50%) scale(1.22);
+}
+
+.robot-floating {
+  animation: robotFloat 3.2s ease-in-out infinite;
+}
+
+.robot-floating-alt {
+  animation: robotFloatAlt 3.8s ease-in-out infinite;
+}
+
+@keyframes robotFloat {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-7px); }
+}
+
+@keyframes robotFloatAlt {
+  0%, 100% { transform: translateY(-5px); }
+  50% { transform: translateY(2px); }
 }
 
 .hotspot-glow {
-  box-shadow: 0 0 15px currentColor;
-  animation: hotspotPulse 2s infinite ease-in-out;
+  box-shadow: 0 0 20px currentColor, 0 0 35px currentColor;
+  animation: hotspotPulse 1.8s infinite ease-in-out;
 }
 
 @keyframes hotspotPulse {
-  0%, 100% { transform: scale(1); opacity: 0.85; }
-  50% { transform: scale(1.18); opacity: 1; }
+  0%, 100% { transform: scale(1); opacity: 0.85; filter: drop-shadow(0 0 8px currentColor); }
+  50% { transform: scale(1.25); opacity: 1; filter: drop-shadow(0 0 16px currentColor); }
+}
+
+/* Rayo Láser Central que baja del techo */
+.laser-pillar {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 140px;
+  height: 58%;
+  background: radial-gradient(ellipse at 50% 0%, rgba(6, 182, 212, 0.45) 0%, rgba(6, 182, 212, 0.1) 45%, transparent 75%);
+  pointer-events: none;
+  animation: laserFlicker 2.4s ease-in-out infinite alternate;
+  z-index: 10;
+}
+
+@keyframes laserFlicker {
+  0% { opacity: 0.55; transform: translateX(-50%) scaleX(0.9); }
+  100% { opacity: 0.95; transform: translateX(-50%) scaleX(1.1); }
+}
+
+/* Ondas de choque en el apretón de manos */
+.energy-ripple {
+  position: absolute;
+  border-radius: 50%;
+  border: 2px solid #06b6d4;
+  pointer-events: none;
+  animation: rippleOut 2.2s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+}
+
+.energy-ripple:nth-child(2) {
+  animation-delay: 0.7s;
+}
+
+.energy-ripple:nth-child(3) {
+  animation-delay: 1.4s;
+}
+
+@keyframes rippleOut {
+  0% { width: 10px; height: 10px; opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  100% { width: 180px; height: 180px; opacity: 0; transform: translate(-50%, -50%) scale(2); }
+}
+
+/* Líneas de circuito animadas sobre el suelo de la foto */
+.photo-circuit-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 12;
+}
+
+.floor-data-stream {
+  stroke-dasharray: 10 14;
+  animation: streamFlow 1.8s linear infinite;
+}
+
+@keyframes streamFlow {
+  from { stroke-dashoffset: 48; }
+  to { stroke-dashoffset: 0; }
+}
+
+/* Escáner holográfico sobre el HUD de los robots */
+.hud-scanner {
+  position: relative;
+  overflow: hidden;
+}
+
+.hud-scanner::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #06b6d4, #ffffff, #06b6d4, transparent);
+  animation: scanBar 1.6s ease-in-out infinite;
+}
+
+@keyframes scanBar {
+  0% { transform: translateY(-10px); opacity: 0; }
+  50% { opacity: 1; }
+  100% { transform: translateY(35px); opacity: 0; }
 }
 
 /* Pasos del Pipeline de Ejecución */
