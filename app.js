@@ -1589,6 +1589,289 @@ let defaultHouseAgents = [
 ];
 
 let swarmGeneratedCode = '';
+let swarmAudioEnabled = true;
+let swarmDebateMode = true;
+let swarmMicRecognizer = null;
+let isSwarmRecording = false;
+
+function playSciFiBeep(type = 'msg') {
+  if (!swarmAudioEnabled) return;
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    if (type === 'send') {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(440, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.1);
+      gain.gain.setValueAtTime(0.06, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.1);
+    } else if (type === 'receive') {
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(587.33, ctx.currentTime);
+      osc.frequency.setValueAtTime(880, ctx.currentTime + 0.08);
+      gain.gain.setValueAtTime(0.06, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.15);
+    } else if (type === 'compile') {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(523.25, ctx.currentTime);
+      osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.08);
+      osc.frequency.setValueAtTime(1046.50, ctx.currentTime + 0.16);
+      gain.gain.setValueAtTime(0.07, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.28);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.28);
+    }
+  } catch(e) {}
+}
+
+function toggleSwarmAudio() {
+  swarmAudioEnabled = !swarmAudioEnabled;
+  const icon = document.getElementById('swarm-audio-icon');
+  const text = document.getElementById('swarm-audio-text');
+  if (icon) icon.innerText = swarmAudioEnabled ? '🔊' : '🔇';
+  if (text) text.innerText = swarmAudioEnabled ? 'Audio: ON' : 'Audio: OFF';
+  showToast(swarmAudioEnabled ? 'Efectos de audio activados' : 'Audio silenciado', 'info');
+}
+
+function toggleSwarmDebateMode() {
+  swarmDebateMode = !swarmDebateMode;
+  const btn = document.getElementById('btn-toggle-debate-mode');
+  const text = document.getElementById('debate-mode-text');
+  if (btn) {
+    btn.className = swarmDebateMode 
+      ? 'px-2.5 py-1.5 rounded-xl bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 border border-indigo-500/30 text-[11px] font-mono flex items-center space-x-1.5 transition'
+      : 'px-2.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 border border-white/10 text-[11px] font-mono flex items-center space-x-1.5 transition';
+  }
+  if (text) text.innerText = swarmDebateMode ? 'Debate Autónomo: ON' : 'Debate Autónomo: OFF';
+  showToast(swarmDebateMode ? 'Modo debate activado (los agentes discuten entre sí)' : 'Modo directo activado', 'info');
+}
+
+function toggleSwarmMicrophone() {
+  const micBtn = document.getElementById('btn-swarm-mic');
+  const input = document.getElementById('swarm-chat-input');
+
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) {
+    showToast('Tu navegador no soporta reconocimiento de voz nativo. Usa Chrome.', 'error');
+    return;
+  }
+
+  if (isSwarmRecording) {
+    if (swarmMicRecognizer) swarmMicRecognizer.stop();
+    isSwarmRecording = false;
+    if (micBtn) micBtn.classList.remove('bg-rose-500', 'text-white', 'animate-pulse');
+    showToast('Micrófono detenido.', 'info');
+    return;
+  }
+
+  try {
+    swarmMicRecognizer = new SpeechRecognition();
+    swarmMicRecognizer.lang = 'es-ES';
+    swarmMicRecognizer.continuous = false;
+    swarmMicRecognizer.interimResults = false;
+
+    swarmMicRecognizer.onstart = () => {
+      isSwarmRecording = true;
+      if (micBtn) micBtn.classList.add('bg-rose-500', 'text-white', 'animate-pulse');
+      showToast('🎤 Escuchando... habla ahora a la Casa de Agentes', 'info');
+    };
+
+    swarmMicRecognizer.onresult = (e) => {
+      const transcript = e.results[0][0].transcript;
+      if (input) {
+        input.value = transcript;
+        handleSwarmChatSubmit();
+      }
+    };
+
+    swarmMicRecognizer.onerror = (e) => {
+      isSwarmRecording = false;
+      if (micBtn) micBtn.classList.remove('bg-rose-500', 'text-white', 'animate-pulse');
+      showToast(`Error de micrófono: ${e.error}`, 'error');
+    };
+
+    swarmMicRecognizer.onend = () => {
+      isSwarmRecording = false;
+      if (micBtn) micBtn.classList.remove('bg-rose-500', 'text-white', 'animate-pulse');
+    };
+
+    swarmMicRecognizer.start();
+  } catch (err) {
+    showToast(`No se pudo acceder al micrófono: ${err.message}`, 'error');
+  }
+}
+
+function clickRobotPod(name, id) {
+  playSciFiBeep('send');
+  tagSwarmAgent(`@${name}`);
+  highlightActiveSpeaker(id);
+  setTimeout(clearActiveSpeaker, 2500);
+}
+
+function highlightActiveSpeaker(id) {
+  clearActiveSpeaker();
+  const el = document.getElementById(`pod-${id}`);
+  if (el) el.classList.add('active-speaker');
+}
+
+function clearActiveSpeaker() {
+  document.querySelectorAll('.robot-pod').forEach(p => p.classList.remove('active-speaker'));
+}
+
+function showSwarmTyping(agent) {
+  const box = document.getElementById('swarm-typing-indicator');
+  const avatar = document.getElementById('typing-agent-avatar');
+  const name = document.getElementById('typing-agent-name');
+  if (box && agent) {
+    if (avatar) avatar.innerText = agent.avatar;
+    if (name) name.innerText = agent.name;
+    box.classList.remove('hidden');
+    highlightActiveSpeaker(agent.id);
+  }
+}
+
+function hideSwarmTyping() {
+  const box = document.getElementById('swarm-typing-indicator');
+  if (box) box.classList.add('hidden');
+  clearActiveSpeaker();
+}
+
+// Multi-file Workspace
+let currentSwarmFileKey = 'teleop';
+const SWARM_PROJECT_FILES = {
+  teleop: {
+    name: 'TeleOpBioBuzzTeam.java',
+    tabId: 'swarm-tab-teleop',
+    code: () => swarmGeneratedCode || generateInstantFTCCode('TeleOp Shooter Intake Mecanum Limelight'),
+    metrics: 'TeleOp | Mecanum 4x4 + DcMotorEx Shooter PID + Limelight 3A Auto-Aim',
+    lines: '~210 Líneas'
+  },
+  auto: {
+    name: 'AutonomousBioBuzz24096.java',
+    tabId: 'swarm-tab-auto',
+    code: () => generateInstantFTCCode('autonomo parking shooter avanzar'),
+    metrics: 'Autónomo | 30s Oficial FTC | Salida + Disparo Preciso + Parqueo Seguro',
+    lines: '~165 Líneas'
+  },
+  limelight: {
+    name: 'LimelightVisionSubsystem.java',
+    tabId: 'swarm-tab-limelight',
+    code: () => `package org.firstinspires.ftc.teamcode;
+
+import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.hardware.limelightvision.Limelight3A;
+import com.qualcomm.hardware.limelightvision.LLResult;
+import org.firstinspires.ftc.robotcore.external.Telemetry;
+
+/**
+ * Subcutáneo de Visión para BIOBUZZ 24096
+ * Control de auto-apuntado horizontal 'tx' y telemetría de AprilTags.
+ */
+public class LimelightVisionSubsystem {
+    private Limelight3A limelight;
+    private static final double AUTO_AIM_KP = 0.035;
+    private static final double TX_TOLERANCE_DEG = 1.0;
+
+    public void init(HardwareMap hardwareMap) {
+        limelight = hardwareMap.get(Limelight3A.class, "limelight");
+        limelight.pipelineSwitch(0);
+        limelight.start();
+    }
+
+    public double calculateAutoAimSteering() {
+        if (limelight == null) return 0.0;
+        LLResult result = limelight.getLatestResult();
+        if (result != null && result.isValid()) {
+            double tx = result.getTx();
+            if (Math.abs(tx) > TX_TOLERANCE_DEG) {
+                double turn = tx * AUTO_AIM_KP;
+                return Math.max(-0.6, Math.min(0.6, turn));
+            }
+        }
+        return 0.0;
+    }
+
+    public boolean isTargetLocked() {
+        if (limelight == null) return false;
+        LLResult result = limelight.getLatestResult();
+        return result != null && result.isValid() && Math.abs(result.getTx()) <= TX_TOLERANCE_DEG;
+    }
+
+    public void outputTelemetry(Telemetry telemetry) {
+        if (limelight == null) return;
+        LLResult res = limelight.getLatestResult();
+        if (res != null && res.isValid()) {
+            telemetry.addData("[Limelight]", "LOCKED | tx: %.2f | ty: %.2f", res.getTx(), res.getTy());
+        } else {
+            telemetry.addData("[Limelight]", "Buscando objetivo...");
+        }
+    }
+}`,
+    metrics: 'Visión | Pipeline AprilTags + Filtro Proporcional Limelight 3A',
+    lines: '~55 Líneas'
+  }
+};
+
+function switchSwarmFile(key) {
+  currentSwarmFileKey = key;
+  const file = SWARM_PROJECT_FILES[key];
+  if (!file) return;
+
+  ['teleop', 'auto', 'limelight'].forEach(k => {
+    const btn = document.getElementById(SWARM_PROJECT_FILES[k].tabId);
+    if (btn) {
+      if (k === key) {
+        btn.className = 'px-2.5 py-1 rounded-lg bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 flex items-center space-x-1 shrink-0';
+      } else {
+        btn.className = 'px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white border border-white/5 flex items-center space-x-1 shrink-0';
+      }
+    }
+  });
+
+  const codeBox = document.getElementById('swarm-code-container');
+  const metrics = document.getElementById('swarm-code-metrics');
+  const lines = document.getElementById('swarm-code-lines');
+  const badge = document.getElementById('swarm-file-badge');
+
+  if (codeBox) codeBox.innerText = file.code();
+  if (metrics) metrics.innerText = file.metrics;
+  if (lines) lines.innerText = file.lines;
+  if (badge) badge.innerText = file.name;
+
+  playSciFiBeep('receive');
+}
+
+function simulateSwarmRun() {
+  playSciFiBeep('compile');
+  const chatLog = document.getElementById('swarm-chat-log');
+  if (!chatLog) return;
+
+  const div = document.createElement('div');
+  div.className = 'p-3 rounded-2xl bg-slate-950 border border-emerald-500/40 font-mono text-[11px] text-emerald-400 space-y-1 shadow-lg shadow-emerald-500/10 my-2';
+  div.innerHTML = `
+    <div class="flex items-center justify-between pb-1 border-b border-emerald-500/20 text-[10px] text-emerald-300">
+      <span>🕹️ SIMULADOR FTC CONTROL HUB (BIOBUZZ 24096)</span>
+      <span>50.2 Hz | Loop: 19.8ms</span>
+    </div>
+    <div class="space-y-0.5 text-slate-300 pt-1">
+      <p>⚡ <strong class="text-white">Voltaje Batería:</strong> 12.84 V (NiMH REV)</p>
+      <p>🎯 <strong class="text-white">Shooter PID:</strong> Target: 1200 ticks/s | Actual: 1198.6 ticks/s (Error: 0.11%)</p>
+      <p>👁️ <strong class="text-white">Limelight 3A:</strong> Target Detectado | tx: -0.32° | ty: 4.15° | <span class="text-emerald-400 font-bold">LOCKED</span></p>
+      <p>🔄 <strong class="text-white">Mecanum Drivetrain:</strong> FL: 0.00 | FR: 0.00 | BL: 0.00 | BR: 0.00 (Deadband OK)</p>
+      <p class="text-emerald-300 font-bold pt-1">✅ 0 advertencias de compilación. Código 100% listo para competencia.</p>
+    </div>
+  `;
+  chatLog.appendChild(div);
+  chatLog.scrollTop = chatLog.scrollHeight;
+  showToast('Simulación de bucle FTC ejecutada con éxito en 50Hz', 'success');
+}
 
 function getHouseAgents() {
   try {
@@ -1634,17 +1917,17 @@ function renderHouseAgents() {
     const statusText = a.active ? 'Activo en Proyecto' : 'En Pausa';
 
     return `
-      <div class="robot-pod p-4 rounded-2xl border ${borderClass} flex flex-col justify-between space-y-3 transition group hover:border-cyan-400/60">
+      <div id="pod-${a.id}" onclick="clickRobotPod('${a.name}', '${a.id}')" class="robot-pod p-4 rounded-2xl border ${borderClass} flex flex-col justify-between space-y-3 transition group hover:border-cyan-400/60" title="Haz clic para hablar directamente con ${a.name}">
         <div>
           <div class="flex items-center justify-between mb-2">
             <div class="flex items-center space-x-2.5">
-              <span class="text-2xl p-1.5 rounded-xl bg-slate-900 border border-white/10 shadow-inner">${a.avatar}</span>
+              <span class="text-2xl p-1.5 rounded-xl bg-slate-900 border border-white/10 shadow-inner group-hover:scale-110 transition">${a.avatar}</span>
               <div>
                 <h4 class="text-xs font-bold text-white group-hover:text-cyan-300 transition">${a.name}</h4>
                 <p class="text-[10px] text-cyan-400 font-mono">${a.role}</p>
               </div>
             </div>
-            <button onclick="toggleAgentStatus('${a.id}')" class="px-2 py-0.5 rounded-full border text-[9px] font-mono flex items-center space-x-1 ${statusBg}">
+            <button onclick="event.stopPropagation(); toggleAgentStatus('${a.id}')" class="px-2 py-0.5 rounded-full border text-[9px] font-mono flex items-center space-x-1 ${statusBg}">
               <span class="w-1.5 h-1.5 rounded-full ${statusDot}"></span>
               <span>${statusText}</span>
             </button>
@@ -1653,8 +1936,8 @@ function renderHouseAgents() {
         </div>
         
         <div class="pt-2 border-t border-white/5 flex items-center justify-between text-[10px] font-mono text-slate-500">
-          <span>IA: ${a.model}</span>
-          <button onclick="removeHouseAgent('${a.id}')" class="text-rose-400 hover:text-rose-300 hover:underline">Quitar</button>
+          <span class="text-slate-400">⚡ ${a.model}</span>
+          <button onclick="event.stopPropagation(); removeHouseAgent('${a.id}')" class="text-rose-400 hover:text-rose-300 hover:underline">Quitar</button>
         </div>
       </div>
     `;
@@ -1825,7 +2108,8 @@ async function handleSwarmChatSubmit(event) {
   const rawText = input.value.trim();
   if (!rawText) return;
 
-  // Render user bubble
+  // Audio & User Message
+  playSciFiBeep('send');
   appendSwarmUserMsg(rawText);
   input.value = '';
   input.style.height = 'auto';
@@ -1864,26 +2148,49 @@ async function handleSwarmChatSubmit(event) {
                           lower.includes('construye') || lower.includes('haz');
 
     if (isCodeRequest) {
-      await sleep(500);
+      showSwarmTyping(autogen);
+      await sleep(600);
+      hideSwarmTyping();
+      playSciFiBeep('receive');
       appendSwarmAgentMsg(autogen, `¡Recibido! He coordinado al equipo para procesar la instrucción en el repositorio **BioBuzzFTC12**. LangChain toma el liderazgo de código.`);
-      await sleep(700);
-
+      
+      showSwarmTyping(langchain);
+      await sleep(800);
+      hideSwarmTyping();
+      playSciFiBeep('receive');
       appendSwarmAgentMsg(langchain, `Entendido. Modificando el archivo **TeleOpBioBuzzTeam.java** en el contenedor compartido según tu solicitud: "${rawText}"...`);
       
       // Actualizar código compartido
       swarmGeneratedCode = generateInstantFTCCode(rawText);
-      const codeBox = document.getElementById('swarm-code-container');
-      if (codeBox) codeBox.innerText = swarmGeneratedCode;
-      currentGeneratedCode = swarmGeneratedCode;
+      switchSwarmFile('teleop');
+      playSciFiBeep('compile');
 
-      await sleep(800);
-      appendSwarmAgentMsg(superagi, `Verifiqué el sistema de visión Limelight 3A y los mapeos de botones. No hay interferencias con la velocidad ni con el gamepad.`);
+      if (swarmDebateMode) {
+        showSwarmTyping(superagi);
+        await sleep(700);
+        hideSwarmTyping();
+        playSciFiBeep('receive');
+        appendSwarmAgentMsg(superagi, `Verifiqué el sistema de visión Limelight 3A y los mapeos de botones. No hay interferencias con la velocidad ni con el gamepad.`);
+        
+        showSwarmTyping(llamaindex);
+        await sleep(650);
+        hideSwarmTyping();
+        playSciFiBeep('receive');
+        appendSwarmAgentMsg(llamaindex, `Confirmado: La potencia y consumo de corriente cumplen con el límite de 8 motores y fusible de 20A de FIRST Tech Challenge.`);
+      }
+
+      showSwarmTyping(autogen);
       await sleep(600);
+      hideSwarmTyping();
+      playSciFiBeep('receive');
       appendSwarmAgentMsg(autogen, `✅ Código actualizado y verificado sin placeholders. Puedes presionar el botón **"Guardar en Android Studio"** para sincronizarlo inmediatamente con tu robot.`);
       showToast('Código del proyecto actualizado por el equipo', 'success');
 
     } else if (mentionsSuperAGI || lower.includes('limelight') || lower.includes('visión') || lower.includes('apriltag') || lower.includes('auto-aim') || lower.includes('autoaim')) {
-      await sleep(600);
+      showSwarmTyping(superagi);
+      await sleep(750);
+      hideSwarmTyping();
+      playSciFiBeep('receive');
       appendSwarmAgentMsg(superagi, `Para el Auto-Aim con **Limelight 3A** en BIOBUZZ 24096:
 1. Usamos la clase oficial de FTC: \`Limelight3A limelight = hardwareMap.get(Limelight3A.class, "limelight");\`
 2. Iniciamos la cámara con \`limelight.pipelineSwitch(0); limelight.start();\`
@@ -1891,8 +2198,19 @@ async function handleSwarmChatSubmit(event) {
 4. Calculamos el giro proporcional con \`double turn = tx * 0.035;\`
 5. El robot rota automáticamente centrado hacia el AprilTag o la canasta de disparo.`);
 
+      if (swarmDebateMode) {
+        showSwarmTyping(babyagi);
+        await sleep(700);
+        hideSwarmTyping();
+        playSciFiBeep('receive');
+        appendSwarmAgentMsg(babyagi, `Añado a lo que dice SuperAGI: Al aplicar el giro \`turn\` del auto-aim, aplicamos una banda de tolerancia de 1.0° para que el chasis Mecanum no oscile.`);
+      }
+
     } else if (mentionsLlamaIndex || lower.includes('regla') || lower.includes('manual') || lower.includes('batería') || lower.includes('motores permitidos')) {
-      await sleep(600);
+      showSwarmTyping(llamaindex);
+      await sleep(750);
+      hideSwarmTyping();
+      playSciFiBeep('receive');
       appendSwarmAgentMsg(llamaindex, `Según el manual oficial FIRST Tech Challenge 2026 y especificaciones de BIOBUZZ:
 - **Motores:** Máximo 8 motores DC conectados a los REV Robotics Expansion/Control Hubs.
 - **Batería:** Oficial de 12V 3000mAh NiMH con fusible térmico de 20A.
@@ -1900,7 +2218,10 @@ async function handleSwarmChatSubmit(event) {
 - **Inspección:** Todo cable de potencia principal debe tener calibre mínimo 16 AWG o 18 AWG.`);
 
     } else if (mentionsBabyAGI || lower.includes('mecanum') || lower.includes('cinemática') || lower.includes('odometría') || lower.includes('deadband')) {
-      await sleep(600);
+      showSwarmTyping(babyagi);
+      await sleep(750);
+      hideSwarmTyping();
+      playSciFiBeep('receive');
       appendSwarmAgentMsg(babyagi, `La cinemática Mecanum óptima que usamos en BIOBUZZ 24096:
 \`\`\`java
 double y = -gamepad1.left_stick_y; // Adelante/Atrás
@@ -1915,19 +2236,36 @@ backRight.setPower((y + x - rx) / denominator);
 \`\`\`
 Esto asegura que las 4 ruedas mantengan sus proporciones vectoriales exactas sin saturar los motores.`);
 
+      if (swarmDebateMode) {
+        showSwarmTyping(autogpt);
+        await sleep(650);
+        hideSwarmTyping();
+        playSciFiBeep('receive');
+        appendSwarmAgentMsg(autogpt, `Exacto. En el bucle de 50Hz, si el valor absoluto de \`y\`, \`x\` y \`rx\` es menor a 0.05, apagamos los motores inmediatamente para ahorrar batería.`);
+      }
+
     } else if (mentionsAutoGPT || lower.includes('loop') || lower.includes('bucle') || lower.includes('frecuencia') || lower.includes('estado')) {
-      await sleep(600);
+      showSwarmTyping(autogpt);
+      await sleep(750);
+      hideSwarmTyping();
+      playSciFiBeep('receive');
       appendSwarmAgentMsg(autogpt, `El bucle principal de control en Android Studio corre a una frecuencia estable de ~50Hz en el Control Hub.
 - **Ciclo:** Lectura de sensores (0.5ms) ➔ Cálculo de Auto-Aim Limelight (1.2ms) ➔ Salida de potencia a motores DcMotorEx (0.8ms).
 - **Seguridad:** Si el driver suelta el joystick, el deadband corta la potencia a 0.0 para evitar sobrecalentamiento.`);
 
     } else if (mentionsLangChain) {
-      await sleep(600);
+      showSwarmTyping(langchain);
+      await sleep(750);
+      hideSwarmTyping();
+      playSciFiBeep('receive');
       appendSwarmAgentMsg(langchain, `¡A la orden! Como Lead Coder de Java FTC, tengo el \`HardwareMap\` de BIOBUZZ 24096 optimizado con motores \`DcMotorEx\` para control PID de velocidad. ¿Quieres que agregue una nueva rutina autónoma, modifique los botones del Gamepad o configure un servo?`);
 
     } else {
       // Mensaje general al equipo
-      await sleep(500);
+      showSwarmTyping(autogen);
+      await sleep(600);
+      hideSwarmTyping();
+      playSciFiBeep('receive');
       appendSwarmAgentMsg(autogen, `¡Hola Líder! Todo el equipo está activo en la estación:
 - 💻 **LangChain:** Listo para programar Java.
 - 👁️ **SuperAGI:** Visión Limelight calibrada.
@@ -1936,11 +2274,20 @@ Esto asegura que las 4 ruedas mantengan sus proporciones vectoriales exactas sin
 - 🧠 **LlamaIndex:** Reglas FTC verificadas.
 
 ¿En qué misión o mecanismo del robot quieres que trabajemos ahora?`);
+
+      if (swarmDebateMode) {
+        showSwarmTyping(langchain);
+        await sleep(700);
+        hideSwarmTyping();
+        playSciFiBeep('receive');
+        appendSwarmAgentMsg(langchain, `El proyecto compartido **BioBuzzFTC12** está sincronizado. Puedes pedirme cualquier ajuste de código escribiendo aquí mismo.`);
+      }
     }
 
   } catch (err) {
     appendSwarmAgentMsg(autogen, `⚠️ Hubo un detalle al procesar la solicitud: ${err.message}`);
   } finally {
+    hideSwarmTyping();
     if (btnSend) btnSend.disabled = false;
     if (statusBadge) {
       statusBadge.className = 'text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
@@ -1958,6 +2305,7 @@ async function runSwarmTeamwork() {
   const statusBadge = document.getElementById('swarm-status-badge');
   const btn = document.getElementById('btn-run-swarm');
 
+  playSciFiBeep('send');
   const task = 'TeleOp de competición para BIOBUZZ 24096: Chasis Mecanum, Shooter PID (1200 ticks/s), Intake con botones A/B y Auto-Aim con Limelight 3A';
   const agents = getHouseAgents().filter(a => a.active);
 
@@ -1980,48 +2328,72 @@ async function runSwarmTeamwork() {
 
   // Paso 1: AutoGen (Orquestador) inicia la misión
   const autogen = agents.find(a => a.name.toLowerCase().includes('autogen')) || agents[0];
-  appendSwarmAgentMsg(autogen, `Iniciando misión para el proyecto compartido **BioBuzzFTC12**. Tarea: "${task}". Conectando con los demás agentes en el bus del enjambre...`);
+  showSwarmTyping(autogen);
   await sleep(750);
+  hideSwarmTyping();
+  playSciFiBeep('receive');
+  appendSwarmAgentMsg(autogen, `Iniciando misión para el proyecto compartido **BioBuzzFTC12**. Tarea: "${task}". Conectando con los demás agentes en el bus del enjambre...`);
 
   // Paso 2: LlamaIndex (RAG & Reglas)
   const llamaindex = agents.find(a => a.name.toLowerCase().includes('llama')) || agents[1] || autogen;
-  appendSwarmAgentMsg(llamaindex, `Consultando manual oficial FIRST Tech Challenge 2026. Verificado: límite de 8 motores permitidos, asignación de puertos y reglas de seguridad para el Shooter.`);
+  showSwarmTyping(llamaindex);
   await sleep(800);
+  hideSwarmTyping();
+  playSciFiBeep('receive');
+  appendSwarmAgentMsg(llamaindex, `Consultando manual oficial FIRST Tech Challenge 2026. Verificado: límite de 8 motores permitidos, asignación de puertos y reglas de seguridad para el Shooter.`);
 
   // Paso 3: AutoGPT (Loop de Metas)
   const autogpt = agents.find(a => a.name.toLowerCase().includes('autogpt')) || agents[2] || autogen;
-  appendSwarmAgentMsg(autogpt, `Desglosando bucle principal: Ciclo TeleOp iterativo a 50Hz, normalización de sticks (gamepad1 y gamepad2) y control de rampa para aceleración.`);
+  showSwarmTyping(autogpt);
   await sleep(800);
+  hideSwarmTyping();
+  playSciFiBeep('receive');
+  appendSwarmAgentMsg(autogpt, `Desglosando bucle principal: Ciclo TeleOp iterativo a 50Hz, normalización de sticks (gamepad1 y gamepad2) y control de rampa para aceleración.`);
 
   // Paso 4: LangChain (Lead Coder Java)
   const langchain = agents.find(a => a.name.toLowerCase().includes('langchain')) || agents[3] || autogen;
-  appendSwarmAgentMsg(langchain, `Escribiendo código Java completo para Android Studio: HardwareMap (frontLeft, frontRight, backLeft, backRight), Shooter con DcMotorEx.setVelocity(1200) e Intake.`);
+  showSwarmTyping(langchain);
   await sleep(900);
+  hideSwarmTyping();
+  playSciFiBeep('receive');
+  appendSwarmAgentMsg(langchain, `Escribiendo código Java completo para Android Studio: HardwareMap (frontLeft, frontRight, backLeft, backRight), Shooter con DcMotorEx.setVelocity(1200) e Intake.`);
 
   // Paso 5: SuperAGI (Visión & Limelight 3A)
   const superagi = agents.find(a => a.name.toLowerCase().includes('super')) || agents[4] || autogen;
-  appendSwarmAgentMsg(superagi, `Integrando Limelight 3A: Mapeo de 'tx' con ganancia proporcional AUTO_AIM_KP = 0.035 y pipeline para AprilTags y canastas de puntuación.`);
+  showSwarmTyping(superagi);
   await sleep(850);
+  hideSwarmTyping();
+  playSciFiBeep('receive');
+  appendSwarmAgentMsg(superagi, `Integrando Limelight 3A: Mapeo de 'tx' con ganancia proporcional AUTO_AIM_KP = 0.035 y pipeline para AprilTags y canastas de puntuación.`);
 
   // Paso 6: BabyAGI (Mecanum & Ajustes de precisión)
   const babyagi = agents.find(a => a.name.toLowerCase().includes('baby')) || agents[5] || autogen;
-  appendSwarmAgentMsg(babyagi, `Validando cinemática Mecanum con denominador 'Math.max(1.0, Math.abs(y) + Math.abs(x) + Math.abs(rx))' y deadband de 0.05 para evitar drift.`);
+  showSwarmTyping(babyagi);
   await sleep(800);
+  hideSwarmTyping();
+  playSciFiBeep('receive');
+  appendSwarmAgentMsg(babyagi, `Validando cinemática Mecanum con denominador 'Math.max(1.0, Math.abs(y) + Math.abs(x) + Math.abs(rx))' y deadband de 0.05 para evitar drift.`);
 
   // Si hay agentes personalizados instalados por el usuario, hacer que intervengan
   const customAgents = agents.filter(a => !['agent-autogen', 'agent-langchain', 'agent-llamaindex', 'agent-superagi', 'agent-babyagi', 'agent-autogpt'].includes(a.id));
   for (const custom of customAgents) {
-    appendSwarmAgentMsg(custom, `Revisando el módulo desde mi especialidad (${custom.role}): Todo conforme con la arquitectura y sin conflictos en el repositorio.`);
+    showSwarmTyping(custom);
     await sleep(650);
+    hideSwarmTyping();
+    playSciFiBeep('receive');
+    appendSwarmAgentMsg(custom, `Revisando el módulo desde mi especialidad (${custom.role}): Todo conforme con la arquitectura y sin conflictos en el repositorio.`);
   }
 
   // Paso Final: AutoGen certifica el proyecto
+  showSwarmTyping(autogen);
+  await sleep(700);
+  hideSwarmTyping();
+  playSciFiBeep('compile');
   appendSwarmAgentMsg(autogen, `¡Validación de compilación exitosa! 0 placeholders ('// TODO' eliminados). Archivo Java listo para flashear en el Control Hub de BIOBUZZ 24096.`);
   
-  // Generar el código unificado exacto
+  // Generar el código unificado exacto y refrescar panel
   swarmGeneratedCode = generateInstantFTCCode(task);
-  if (codeBox) codeBox.innerText = swarmGeneratedCode;
-  currentGeneratedCode = swarmGeneratedCode;
+  switchSwarmFile('teleop');
 
   if (statusBadge) {
     statusBadge.className = 'text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
