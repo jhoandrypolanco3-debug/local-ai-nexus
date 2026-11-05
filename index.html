@@ -315,44 +315,28 @@
         </div>
       </div>
 
-      <!-- SALA VIRTUAL: PLANO CIBERNÉTICO DE LA OFICINA (Inspirado en la imagen de Agentes 2026) -->
-      <div class="cyber-floor p-6 sm:p-8 rounded-3xl border border-cyan-500/30 shadow-2xl relative overflow-hidden">
+      <!-- SALA VIRTUAL: PLANO CIBERNÉTICO DE LA OFICINA (Visual Idéntico a la Foto 2026) -->
+      <div class="cyber-floor p-5 sm:p-7 rounded-3xl border border-cyan-500/30 shadow-2xl relative overflow-hidden space-y-6">
         
-        <!-- Líneas y Conexiones de Datos en el Suelo -->
-        <svg class="absolute inset-0 w-full h-full pointer-events-none opacity-40" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <linearGradient id="circuitGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stop-color="#06b6d4" />
-              <stop offset="50%" stop-color="#f59e0b" />
-              <stop offset="100%" stop-color="#10b981" />
-            </linearGradient>
-          </defs>
-          <line x1="15%" y1="35%" x2="50%" y2="50%" stroke="url(#circuitGrad)" stroke-width="2" class="circuit-line" />
-          <line x1="85%" y1="35%" x2="50%" y2="50%" stroke="url(#circuitGrad)" stroke-width="2" class="circuit-line" />
-          <line x1="30%" y1="80%" x2="50%" y2="50%" stroke="url(#circuitGrad)" stroke-width="2" class="circuit-line" />
-          <line x1="70%" y1="80%" x2="50%" y2="50%" stroke="url(#circuitGrad)" stroke-width="2" class="circuit-line" />
-          <circle cx="50%" cy="50%" r="48" fill="none" stroke="#06b6d4" stroke-width="1.5" stroke-dasharray="6,6" class="animate-spin" style="animation-duration: 25s;" />
-        </svg>
-
-        <!-- Ventana Skyline Futurista (Inspirada en el Headquarters 2026) -->
-        <div class="skyline-backdrop rounded-2xl p-4 mb-6 border border-cyan-500/20 flex flex-col md:flex-row items-center justify-between gap-3 relative z-10">
+        <!-- Barra de Control Superior -->
+        <div class="flex flex-col md:flex-row items-center justify-between gap-3 relative z-10 pb-4 border-b border-white/10">
           <div class="flex items-center space-x-3">
-            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-indigo-600 flex items-center justify-center text-slate-950 font-black shadow-lg shadow-cyan-500/20 text-lg">
+            <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-cyan-500 to-indigo-600 flex items-center justify-center text-slate-950 font-black shadow-lg shadow-cyan-500/20 text-lg">
               🏢
             </div>
             <div>
               <div class="flex items-center space-x-2">
-                <h3 class="text-sm font-black text-white tracking-wider uppercase font-mono">Cuartel Central de Agentes 2026</h3>
+                <h3 class="text-sm font-black text-white tracking-wider uppercase font-mono">Cuartel Central de Agentes IA 2026</h3>
                 <span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-mono border border-emerald-500/30 flex items-center gap-1">
                   <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                  Enjambre Sincronizado
+                  Multi-Agent Pipeline Activo
                 </span>
               </div>
-              <p class="text-[11px] text-slate-400">Piso holográfico con bus de interconexión directa para robótica FTC (BIOBUZZ 24096)</p>
+              <p class="text-[11px] text-slate-400">Frameworks colaborativos trabajando en el mismo proyecto FTC (BIOBUZZ 24096)</p>
             </div>
           </div>
 
-          <!-- Toggles de Audio y Modo Debate -->
+          <!-- Toggles y Botón de Ejecución -->
           <div class="flex items-center space-x-2">
             <button onclick="toggleSwarmAudio()" id="btn-toggle-swarm-audio" class="px-2.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 border border-white/10 text-[11px] font-mono flex items-center space-x-1.5 transition">
               <span id="swarm-audio-icon">🔊</span>
@@ -362,45 +346,236 @@
               <span>⚡</span>
               <span id="debate-mode-text">Debate Autónomo: ON</span>
             </button>
-          </div>
-        </div>
-
-        <!-- Barra Superior de la Sala -->
-        <div class="relative z-10 flex items-center justify-between mb-4">
-          <div class="flex items-center space-x-2">
-            <span class="text-xs font-mono uppercase tracking-widest text-cyan-400 font-bold">Estaciones de Trabajo de los Robots</span>
-            <span class="text-[11px] text-slate-400 font-mono">• <span id="installed-agents-number">6</span> Activos (Haz clic en un pod para hablarle)</span>
-          </div>
-          <div class="flex items-center space-x-2">
-            <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span class="text-xs font-mono text-emerald-400 font-bold">Bus de Comunicación Activo</span>
-          </div>
-        </div>
-
-        <!-- Grid de Estaciones de Trabajo de los Robots -->
-        <div id="house-agents-grid" class="relative z-10 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-          <!-- Renderizado dinámico de los agentes (AutoGen, LangChain, LlamaIndex, SuperAGI, BabyAGI, AutoGPT) -->
-        </div>
-
-        <!-- Núcleo Central de Enjambre (Holographic Swarm Core) -->
-        <div class="relative z-10 mt-8 p-4 rounded-2xl hologram-screen flex flex-col md:flex-row items-center justify-between gap-4">
-          <div class="flex items-center space-x-3">
-            <div class="w-10 h-10 rounded-xl bg-cyan-500/20 border border-cyan-400/40 flex items-center justify-center text-cyan-300">
-              <i data-lucide="cpu" class="w-5 h-5"></i>
-            </div>
-            <div>
-              <h4 class="text-xs font-bold text-white uppercase tracking-wider font-mono">Núcleo de Sincronización del Proyecto</h4>
-              <p class="text-[11px] text-slate-300">Los agentes leen y modifican el mismo código de robótica en tiempo real sin pisarse.</p>
-            </div>
-          </div>
-
-          <div class="flex items-center space-x-2">
-            <button onclick="runSwarmTeamwork()" id="btn-run-swarm" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 via-amber-500 to-emerald-400 hover:from-cyan-400 hover:to-emerald-300 text-slate-950 font-black text-xs shadow-xl shadow-cyan-500/25 transition flex items-center space-x-2">
-              <i data-lucide="zap" class="w-4 h-4 fill-current"></i>
-              <span>Poner al Equipo a Construir el Robot</span>
+            <button onclick="runMultiAgentPipeline()" id="btn-run-pipeline" class="px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-400 via-amber-400 to-emerald-400 hover:from-cyan-300 hover:to-emerald-300 text-slate-950 font-black text-xs shadow-lg shadow-cyan-500/25 transition flex items-center space-x-1.5">
+              <i data-lucide="play" class="w-3.5 h-3.5 fill-current"></i>
+              <span>Iniciar Pipeline</span>
             </button>
           </div>
         </div>
+
+        <!-- FOTO REAL DEL CUARTEL CON OVERLAYS INTERACTIVOS (Exactamente la Foto) -->
+        <div class="relative rounded-2xl overflow-hidden border border-cyan-500/30 shadow-2xl group">
+          <img src="/agent-house-hq.jpg" alt="Cuartel Central de Agentes 2026" class="w-full h-[320px] sm:h-[400px] md:h-[460px] object-cover object-center filter brightness-95 group-hover:brightness-100 transition duration-500">
+          
+          <!-- Capa de Gradiente Holográfica -->
+          <div class="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-slate-950/30 pointer-events-none"></div>
+
+          <!-- Hotspots Interactivos sobre los Robots de la Foto -->
+          <!-- 1. LangChain (Coding Agent) -->
+          <div onclick="clickRobotPod('LangChain', 'agent-langchain')" style="top: 22%; left: 12%;" class="hq-hotspot flex flex-col items-center group/hs" title="LangChain - Coding Agent">
+            <span class="w-3.5 h-3.5 rounded-full bg-emerald-400 hotspot-glow border border-white"></span>
+            <span class="mt-1 px-2 py-0.5 rounded-md bg-slate-950/90 text-emerald-300 font-mono text-[10px] font-bold border border-emerald-500/50 backdrop-blur-md shadow-lg group-hover/hs:scale-110 transition">
+              💻 LangChain (Coding)
+            </span>
+          </div>
+
+          <!-- 2. AutoGen (Architect Agent) -->
+          <div onclick="clickRobotPod('AutoGen', 'agent-autogen')" style="top: 24%; left: 27%;" class="hq-hotspot flex flex-col items-center group/hs" title="AutoGen - Architect Agent">
+            <span class="w-3.5 h-3.5 rounded-full bg-cyan-400 hotspot-glow border border-white"></span>
+            <span class="mt-1 px-2 py-0.5 rounded-md bg-slate-950/90 text-cyan-300 font-mono text-[10px] font-bold border border-cyan-500/50 backdrop-blur-md shadow-lg group-hover/hs:scale-110 transition">
+              🧠 AutoGen (Architect)
+            </span>
+          </div>
+
+          <!-- 3. BabyAGI (Optimization Agent) -->
+          <div onclick="clickRobotPod('BabyAGI', 'agent-babyagi')" style="top: 21%; left: 43%;" class="hq-hotspot flex flex-col items-center group/hs" title="BabyAGI - Optimization Agent">
+            <span class="w-3.5 h-3.5 rounded-full bg-amber-400 hotspot-glow border border-white"></span>
+            <span class="mt-1 px-2 py-0.5 rounded-md bg-slate-950/90 text-amber-300 font-mono text-[10px] font-bold border border-amber-500/50 backdrop-blur-md shadow-lg group-hover/hs:scale-110 transition">
+              🚀 BabyAGI (Optimization)
+            </span>
+          </div>
+
+          <!-- 4. SuperAGI (Hardware & Vision Agent) -->
+          <div onclick="clickRobotPod('SuperAGI', 'agent-superagi')" style="top: 21%; left: 54%;" class="hq-hotspot flex flex-col items-center group/hs" title="SuperAGI - Hardware Agent">
+            <span class="w-3.5 h-3.5 rounded-full bg-purple-400 hotspot-glow border border-white"></span>
+            <span class="mt-1 px-2 py-0.5 rounded-md bg-slate-950/90 text-purple-300 font-mono text-[10px] font-bold border border-purple-500/50 backdrop-blur-md shadow-lg group-hover/hs:scale-110 transition">
+              ⚙️ SuperAGI (Hardware)
+            </span>
+          </div>
+
+          <!-- 5. AutoGPT (Testing Agent) -->
+          <div onclick="clickRobotPod('AutoGPT', 'agent-autogpt')" style="top: 23%; left: 69%;" class="hq-hotspot flex flex-col items-center group/hs" title="AutoGPT - Testing Agent">
+            <span class="w-3.5 h-3.5 rounded-full bg-orange-400 hotspot-glow border border-white"></span>
+            <span class="mt-1 px-2 py-0.5 rounded-md bg-slate-950/90 text-orange-300 font-mono text-[10px] font-bold border border-orange-500/50 backdrop-blur-md shadow-lg group-hover/hs:scale-110 transition">
+              🧪 AutoGPT (Testing)
+            </span>
+          </div>
+
+          <!-- 6. LlamaIndex (Code Reviewer & Reglas) -->
+          <div onclick="clickRobotPod('LlamaIndex', 'agent-llamaindex')" style="top: 23%; left: 88%;" class="hq-hotspot flex flex-col items-center group/hs" title="LlamaIndex - Code Reviewer">
+            <span class="w-3.5 h-3.5 rounded-full bg-indigo-400 hotspot-glow border border-white"></span>
+            <span class="mt-1 px-2 py-0.5 rounded-md bg-slate-950/90 text-indigo-300 font-mono text-[10px] font-bold border border-indigo-500/50 backdrop-blur-md shadow-lg group-hover/hs:scale-110 transition">
+              🔍 LlamaIndex (Reviewer)
+            </span>
+          </div>
+
+          <!-- Handshake Central (Swarm Core) -->
+          <div onclick="runMultiAgentPipeline()" style="top: 55%; left: 50%;" class="hq-hotspot flex flex-col items-center group/hs cursor-pointer" title="Colaboración en vivo en el mismo proyecto">
+            <span class="w-4 h-4 rounded-full bg-cyan-300 hotspot-glow border-2 border-white"></span>
+            <span class="mt-1 px-2.5 py-0.5 rounded-md bg-black/90 text-cyan-300 font-mono text-[10px] font-extrabold border border-cyan-400 backdrop-blur-md shadow-xl group-hover/hs:scale-110 transition flex items-center space-x-1">
+              <span>🤝</span>
+              <span>Enjambre en Acción</span>
+            </span>
+          </div>
+        </div>
+
+        <!-- PIPELINE DE TRABAJO MULTI-AGENTE (USER REQUEST ➔ FINAL CODE) -->
+        <div class="glass-panel p-4 rounded-2xl border border-white/10 space-y-3">
+          <div class="flex items-center justify-between">
+            <h4 class="text-xs font-bold text-white uppercase tracking-wider font-mono flex items-center gap-1.5">
+              <span>🔄</span>
+              <span>Flujo de Ejecución del Enjambre (Pipeline Oficial)</span>
+            </h4>
+            <span id="pipeline-status-badge" class="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-white/5">En espera de misión</span>
+          </div>
+
+          <!-- Pasos del Pipeline Horizontal -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2 font-mono text-[11px]">
+            <!-- 1. User Request -->
+            <div id="step-user" class="pipeline-step p-2.5 rounded-xl bg-slate-900/90 border border-white/10 flex flex-col justify-between">
+              <span class="text-slate-500 text-[9px] font-bold">PASO 1</span>
+              <p class="font-bold text-white text-[10px] mt-1">👤 User Request</p>
+              <span class="text-[9px] text-slate-400">Instrucción FTC</span>
+            </div>
+
+            <!-- 2. Architect Agent -->
+            <div id="step-architect" class="pipeline-step p-2.5 rounded-xl bg-slate-900/90 border border-white/10 flex flex-col justify-between">
+              <span class="text-cyan-400 text-[9px] font-bold">PASO 2</span>
+              <p class="font-bold text-white text-[10px] mt-1">🧠 Architect</p>
+              <span class="text-[9px] text-slate-400">Estrategia</span>
+            </div>
+
+            <!-- 3. Coding Agent -->
+            <div id="step-coding" class="pipeline-step p-2.5 rounded-xl bg-slate-900/90 border border-white/10 flex flex-col justify-between">
+              <span class="text-emerald-400 text-[9px] font-bold">PASO 3</span>
+              <p class="font-bold text-white text-[10px] mt-1">💻 Coding</p>
+              <span class="text-[9px] text-slate-400">Java FTC</span>
+            </div>
+
+            <!-- 4. Code Reviewer -->
+            <div id="step-reviewer" class="pipeline-step p-2.5 rounded-xl bg-slate-900/90 border border-white/10 flex flex-col justify-between">
+              <span class="text-indigo-400 text-[9px] font-bold">PASO 4</span>
+              <p class="font-bold text-white text-[10px] mt-1">🔍 Reviewer</p>
+              <span class="text-[9px] text-slate-400">Auditoría 0 TODO</span>
+            </div>
+
+            <!-- 5. Safety Agent -->
+            <div id="step-safety" class="pipeline-step p-2.5 rounded-xl bg-slate-900/90 border border-white/10 flex flex-col justify-between">
+              <span class="text-red-400 text-[9px] font-bold">PASO 5</span>
+              <p class="font-bold text-white text-[10px] mt-1">🛡️ Safety</p>
+              <span class="text-[9px] text-slate-400">Límites & 20A</span>
+            </div>
+
+            <!-- 6. Hardware Agent -->
+            <div id="step-hardware" class="pipeline-step p-2.5 rounded-xl bg-slate-900/90 border border-white/10 flex flex-col justify-between">
+              <span class="text-purple-400 text-[9px] font-bold">PASO 6</span>
+              <p class="font-bold text-white text-[10px] mt-1">⚙️ Hardware</p>
+              <span class="text-[9px] text-slate-400">Puertos & Limelight</span>
+            </div>
+
+            <!-- 7. Testing Agent -->
+            <div id="step-testing" class="pipeline-step p-2.5 rounded-xl bg-slate-900/90 border border-white/10 flex flex-col justify-between">
+              <span class="text-orange-400 text-[9px] font-bold">PASO 7</span>
+              <p class="font-bold text-white text-[10px] mt-1">🧪 Testing</p>
+              <span class="text-[9px] text-slate-400">Loop 50Hz</span>
+            </div>
+
+            <!-- 8. Final Code -->
+            <div id="step-final" class="pipeline-step p-2.5 rounded-xl bg-slate-900/90 border border-white/10 flex flex-col justify-between">
+              <span class="text-emerald-400 text-[9px] font-bold">PASO 8</span>
+              <p class="font-bold text-emerald-300 text-[10px] mt-1">🏆 Final Code</p>
+              <span class="text-[9px] text-emerald-400">Android Studio</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- TABLA DE AGENTES Y RESPONSABILIDADES (Especificada por el usuario) -->
+        <div class="glass-panel p-4 rounded-2xl border border-white/10 overflow-x-auto">
+          <div class="flex items-center justify-between mb-3">
+            <h4 class="text-xs font-bold text-white uppercase tracking-wider font-mono flex items-center gap-1.5">
+              <span>📋</span>
+              <span>Tabla de Agentes y Responsabilidades</span>
+            </h4>
+            <span class="text-[11px] text-slate-400 font-mono">Equipo Oficial BIOBUZZ 24096</span>
+          </div>
+
+          <table class="w-full text-left font-mono text-xs">
+            <thead>
+              <tr class="border-b border-white/10 text-slate-400 text-[11px]">
+                <th class="pb-2 font-semibold">Agente</th>
+                <th class="pb-2 font-semibold">Framework / Base</th>
+                <th class="pb-2 font-semibold">Responsabilidad</th>
+                <th class="pb-2 font-semibold text-right">Estado</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-white/5 text-[11px]">
+              <tr class="hover:bg-white/5 transition">
+                <td class="py-2 text-white font-bold flex items-center gap-1.5">
+                  <span>🧠</span>
+                  <span>Architect Agent</span>
+                </td>
+                <td class="py-2 text-cyan-300">Microsoft AutoGen</td>
+                <td class="py-2 text-slate-300">Diseña la estrategia del autónomo y la arquitectura modular.</td>
+                <td class="py-2 text-right"><span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-[9px]">Listo</span></td>
+              </tr>
+              <tr class="hover:bg-white/5 transition">
+                <td class="py-2 text-white font-bold flex items-center gap-1.5">
+                  <span>💻</span>
+                  <span>Coding Agent</span>
+                </td>
+                <td class="py-2 text-emerald-300">LangChain Agent</td>
+                <td class="py-2 text-slate-300">Genera código Java FTC (HardwareMap, Shooter PID, Mecanum).</td>
+                <td class="py-2 text-right"><span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-[9px]">Listo</span></td>
+              </tr>
+              <tr class="hover:bg-white/5 transition">
+                <td class="py-2 text-white font-bold flex items-center gap-1.5">
+                  <span>🔍</span>
+                  <span>Code Reviewer</span>
+                </td>
+                <td class="py-2 text-indigo-300">LlamaIndex RAG</td>
+                <td class="py-2 text-slate-300">Busca errores, elimina placeholders ('// TODO') y malas prácticas.</td>
+                <td class="py-2 text-right"><span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-[9px]">Listo</span></td>
+              </tr>
+              <tr class="hover:bg-white/5 transition">
+                <td class="py-2 text-white font-bold flex items-center gap-1.5">
+                  <span>🛡️</span>
+                  <span>Safety Agent</span>
+                </td>
+                <td class="py-2 text-red-300">NeoIA Safety Guard</td>
+                <td class="py-2 text-slate-300">Comprueba paradas de emergencia, límites de 20A y calentamiento.</td>
+                <td class="py-2 text-right"><span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-[9px]">Listo</span></td>
+              </tr>
+              <tr class="hover:bg-white/5 transition">
+                <td class="py-2 text-white font-bold flex items-center gap-1.5">
+                  <span>⚙️</span>
+                  <span>Hardware Agent</span>
+                </td>
+                <td class="py-2 text-purple-300">SuperAGI Vision</td>
+                <td class="py-2 text-slate-300">Verifica nombres, mapeo de puertos y configuración de Limelight 3A.</td>
+                <td class="py-2 text-right"><span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-[9px]">Listo</span></td>
+              </tr>
+              <tr class="hover:bg-white/5 transition">
+                <td class="py-2 text-white font-bold flex items-center gap-1.5">
+                  <span>🧪</span>
+                  <span>Testing Agent</span>
+                </td>
+                <td class="py-2 text-orange-300">AutoGPT Executive</td>
+                <td class="py-2 text-slate-300">Diseña pruebas a 50Hz y analiza resultados de Driver Station.</td>
+                <td class="py-2 text-right"><span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-[9px]">Listo</span></td>
+              </tr>
+              <tr class="hover:bg-white/5 transition">
+                <td class="py-2 text-white font-bold flex items-center gap-1.5">
+                  <span>🚀</span>
+                  <span>Optimization Agent</span>
+                </td>
+                <td class="py-2 text-amber-300">BabyAGI Pathing</td>
+                <td class="py-2 text-slate-300">Mejora rendimiento, precisión en cinemática y curvas Mecanum.</td>
+                <td class="py-2 text-right"><span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-[9px]">Listo</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
       </div>
 
       <!-- Área de Trabajo Conjunto: Chat en Vivo con los Agentes y Código Final -->
@@ -893,6 +1068,6 @@
 
   <div id="toast-container" class="fixed bottom-4 right-4 z-50 space-y-2 pointer-events-none"></div>
 
-  <script src="app.js?v=swarmpro2026_v2"></script>
+  <script src="app.js?v=photo_pipeline_v3"></script>
 </body>
 </html>

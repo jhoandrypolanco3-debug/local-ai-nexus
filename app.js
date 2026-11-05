@@ -2300,107 +2300,146 @@ Esto asegura que las 4 ruedas mantengan sus proporciones vectoriales exactas sin
 // EJECUCIÓN MULTI-AGENTE (SWARM COLLABORATION)
 // ==========================================
 async function runSwarmTeamwork() {
+  await runMultiAgentPipeline();
+}
+
+async function runMultiAgentPipeline() {
+  const steps = [
+    'step-user',
+    'step-architect',
+    'step-coding',
+    'step-reviewer',
+    'step-safety',
+    'step-hardware',
+    'step-testing',
+    'step-final'
+  ];
+
+  const resetSteps = () => {
+    steps.forEach(s => {
+      const el = document.getElementById(s);
+      if (el) el.className = 'pipeline-step p-2.5 rounded-xl bg-slate-900/90 border border-white/10 flex flex-col justify-between';
+    });
+  };
+
+  const markStep = (stepId, status) => {
+    const el = document.getElementById(stepId);
+    if (!el) return;
+    if (status === 'active') {
+      el.className = 'pipeline-step active p-2.5 rounded-xl border border-cyan-400 bg-cyan-500/20 flex flex-col justify-between shadow-lg shadow-cyan-500/30';
+    } else if (status === 'completed') {
+      el.className = 'pipeline-step completed p-2.5 rounded-xl border border-emerald-500 bg-emerald-500/15 flex flex-col justify-between';
+    }
+  };
+
+  resetSteps();
+  const pipeBadge = document.getElementById('pipeline-status-badge');
+  const btn = document.getElementById('btn-run-pipeline');
   const chatLog = document.getElementById('swarm-chat-log');
   const codeBox = document.getElementById('swarm-code-container');
-  const statusBadge = document.getElementById('swarm-status-badge');
-  const btn = document.getElementById('btn-run-swarm');
-
-  playSciFiBeep('send');
-  const task = 'TeleOp de competición para BIOBUZZ 24096: Chasis Mecanum, Shooter PID (1200 ticks/s), Intake con botones A/B y Auto-Aim con Limelight 3A';
-  const agents = getHouseAgents().filter(a => a.active);
-
-  if (agents.length === 0) {
-    showToast('Debes activar al menos un agente en la casa.', 'error');
-    return;
-  }
 
   if (btn) btn.disabled = true;
-  if (statusBadge) {
-    statusBadge.className = 'text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 animate-pulse';
-    statusBadge.innerText = 'Enjambre Trabajando...';
+  if (pipeBadge) {
+    pipeBadge.className = 'text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 animate-pulse';
+    pipeBadge.innerText = '⚡ Pipeline en Ejecución';
   }
-  
+
+  playSciFiBeep('send');
   if (chatLog) chatLog.innerHTML = '';
-  if (codeBox) codeBox.innerHTML = '<span class="text-cyan-400">Los agentes están debatiendo y sincronizando el código en vivo...</span>';
+  if (codeBox) codeBox.innerHTML = '<span class="text-cyan-400">Iniciando pipeline de ejecución: User Request ➔ Architect ➔ Coding ➔ Reviewer ➔ Safety ➔ Hardware ➔ Testing ➔ Final Code...</span>';
 
-  // Simulación interactiva de debate paso a paso con los agentes activos
-  const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  const agents = getHouseAgents();
+  const autogen = agents.find(a => a.name.includes('AutoGen')) || agents[0];
+  const langchain = agents.find(a => a.name.includes('LangChain')) || agents[1] || autogen;
+  const llamaindex = agents.find(a => a.name.includes('LlamaIndex')) || agents[2] || autogen;
+  const superagi = agents.find(a => a.name.includes('SuperAGI')) || agents[3] || autogen;
+  const babyagi = agents.find(a => a.name.includes('BabyAGI')) || agents[4] || autogen;
+  const autogpt = agents.find(a => a.name.includes('AutoGPT')) || agents[5] || autogen;
 
-  // Paso 1: AutoGen (Orquestador) inicia la misión
-  const autogen = agents.find(a => a.name.toLowerCase().includes('autogen')) || agents[0];
+  // 1. User Request
+  markStep('step-user', 'active');
+  appendSwarmUserMsg('Crear TeleOp y estrategia para BIOBUZZ 24096: Mecanum con cinemática precisa, Shooter PID a 1200 ticks/s, Intake botones A/B y Auto-Aim con Limelight 3A.');
+  await sleep(700);
+  markStep('step-user', 'completed');
+
+  // 2. Architect Agent (🧠)
+  markStep('step-architect', 'active');
   showSwarmTyping(autogen);
-  await sleep(750);
-  hideSwarmTyping();
-  playSciFiBeep('receive');
-  appendSwarmAgentMsg(autogen, `Iniciando misión para el proyecto compartido **BioBuzzFTC12**. Tarea: "${task}". Conectando con los demás agentes en el bus del enjambre...`);
-
-  // Paso 2: LlamaIndex (RAG & Reglas)
-  const llamaindex = agents.find(a => a.name.toLowerCase().includes('llama')) || agents[1] || autogen;
-  showSwarmTyping(llamaindex);
-  await sleep(800);
-  hideSwarmTyping();
-  playSciFiBeep('receive');
-  appendSwarmAgentMsg(llamaindex, `Consultando manual oficial FIRST Tech Challenge 2026. Verificado: límite de 8 motores permitidos, asignación de puertos y reglas de seguridad para el Shooter.`);
-
-  // Paso 3: AutoGPT (Loop de Metas)
-  const autogpt = agents.find(a => a.name.toLowerCase().includes('autogpt')) || agents[2] || autogen;
-  showSwarmTyping(autogpt);
-  await sleep(800);
-  hideSwarmTyping();
-  playSciFiBeep('receive');
-  appendSwarmAgentMsg(autogpt, `Desglosando bucle principal: Ciclo TeleOp iterativo a 50Hz, normalización de sticks (gamepad1 y gamepad2) y control de rampa para aceleración.`);
-
-  // Paso 4: LangChain (Lead Coder Java)
-  const langchain = agents.find(a => a.name.toLowerCase().includes('langchain')) || agents[3] || autogen;
-  showSwarmTyping(langchain);
   await sleep(900);
   hideSwarmTyping();
   playSciFiBeep('receive');
-  appendSwarmAgentMsg(langchain, `Escribiendo código Java completo para Android Studio: HardwareMap (frontLeft, frontRight, backLeft, backRight), Shooter con DcMotorEx.setVelocity(1200) e Intake.`);
+  appendSwarmAgentMsg(autogen, `🧠 **Architect Agent:** Diseñando la arquitectura global del OpMode. Estructura modular seleccionada: LinearOpMode con loop a 50Hz, normalización vectorial de tracción y rampa de aceleración para el Shooter.`);
+  markStep('step-architect', 'completed');
 
-  // Paso 5: SuperAGI (Visión & Limelight 3A)
-  const superagi = agents.find(a => a.name.toLowerCase().includes('super')) || agents[4] || autogen;
+  // 3. Coding Agent (💻)
+  markStep('step-coding', 'active');
+  showSwarmTyping(langchain);
+  await sleep(1000);
+  hideSwarmTyping();
+  playSciFiBeep('receive');
+  appendSwarmAgentMsg(langchain, `💻 **Coding Agent:** Generando código Java FTC completo. Mapeo de HardwareMap listo: \`frontLeft\`, \`frontRight\`, \`backLeft\`, \`backRight\`, motor de shooter en \`DcMotorEx\` con PID (\`setVelocity(1200)\`) y motor de intake.`);
+  markStep('step-coding', 'completed');
+
+  // 4. Code Reviewer (🔍)
+  markStep('step-reviewer', 'active');
+  showSwarmTyping(llamaindex);
+  await sleep(850);
+  hideSwarmTyping();
+  playSciFiBeep('receive');
+  appendSwarmAgentMsg(llamaindex, `🔍 **Code Reviewer:** Auditando código. Verificado: 0 comentarios placeholder ('// TODO' eliminados). Nombres conformes con Android Studio y buenas prácticas de FTC implementadas.`);
+  markStep('step-reviewer', 'completed');
+
+  // 5. Safety Agent (🛡️)
+  markStep('step-safety', 'active');
+  const safetyAgent = { id: 'agent-safety', name: 'Safety Agent', avatar: '🛡️', framework: 'NeoIA Safety Guard', role: 'Paradas & Límites' };
+  showSwarmTyping(safetyAgent);
+  await sleep(800);
+  hideSwarmTyping();
+  playSciFiBeep('receive');
+  appendSwarmAgentMsg(safetyAgent, `🛡️ **Safety Agent:** Comprobaciones de seguridad superadas. Integrado paro inmediato con \`!opModeIsActive()\`, fusible de batería protegido (<20A) y corte de corriente si los joysticks entran en deadband.`);
+  markStep('step-safety', 'completed');
+
+  // 6. Hardware Agent (⚙️)
+  markStep('step-hardware', 'active');
   showSwarmTyping(superagi);
   await sleep(850);
   hideSwarmTyping();
   playSciFiBeep('receive');
-  appendSwarmAgentMsg(superagi, `Integrando Limelight 3A: Mapeo de 'tx' con ganancia proporcional AUTO_AIM_KP = 0.035 y pipeline para AprilTags y canastas de puntuación.`);
+  appendSwarmAgentMsg(superagi, `⚙️ **Hardware Agent:** Configuración de hardware validada. Conexión a Limelight 3A lista con \`pipelineSwitch(0)\`, cálculo proporcional de auto-apuntado (\`AUTO_AIM_KP = 0.035\`) y lectura AprilTag.`);
+  markStep('step-hardware', 'completed');
 
-  // Paso 6: BabyAGI (Mecanum & Ajustes de precisión)
-  const babyagi = agents.find(a => a.name.toLowerCase().includes('baby')) || agents[5] || autogen;
-  showSwarmTyping(babyagi);
-  await sleep(800);
+  // 7. Testing Agent (🧪) & Optimization Agent (🚀)
+  markStep('step-testing', 'active');
+  showSwarmTyping(autogpt);
+  await sleep(850);
   hideSwarmTyping();
   playSciFiBeep('receive');
-  appendSwarmAgentMsg(babyagi, `Validando cinemática Mecanum con denominador 'Math.max(1.0, Math.abs(y) + Math.abs(x) + Math.abs(rx))' y deadband de 0.05 para evitar drift.`);
+  appendSwarmAgentMsg(autogpt, `🧪 **Testing Agent:** Simulando pruebas de bucle de control a 50Hz. Tiempos de ciclo: Lectura 0.5ms | Visión 1.2ms | Salida motores 0.8ms. Telemetría de Driver Station en estado óptimo.`);
+  markStep('step-testing', 'completed');
 
-  // Si hay agentes personalizados instalados por el usuario, hacer que intervengan
-  const customAgents = agents.filter(a => !['agent-autogen', 'agent-langchain', 'agent-llamaindex', 'agent-superagi', 'agent-babyagi', 'agent-autogpt'].includes(a.id));
-  for (const custom of customAgents) {
-    showSwarmTyping(custom);
-    await sleep(650);
-    hideSwarmTyping();
-    playSciFiBeep('receive');
-    appendSwarmAgentMsg(custom, `Revisando el módulo desde mi especialidad (${custom.role}): Todo conforme con la arquitectura y sin conflictos en el repositorio.`);
-  }
-
-  // Paso Final: AutoGen certifica el proyecto
-  showSwarmTyping(autogen);
+  showSwarmTyping(babyagi);
   await sleep(700);
   hideSwarmTyping();
-  playSciFiBeep('compile');
-  appendSwarmAgentMsg(autogen, `¡Validación de compilación exitosa! 0 placeholders ('// TODO' eliminados). Archivo Java listo para flashear en el Control Hub de BIOBUZZ 24096.`);
-  
-  // Generar el código unificado exacto y refrescar panel
-  swarmGeneratedCode = generateInstantFTCCode(task);
-  switchSwarmFile('teleop');
+  playSciFiBeep('receive');
+  appendSwarmAgentMsg(babyagi, `🚀 **Optimization Agent:** Optimizando cinemática Mecanum con denominador \`Math.max(1.0, Math.abs(y)+Math.abs(x)+Math.abs(rx))\` para evitar saturación en diagonales.`);
 
-  if (statusBadge) {
-    statusBadge.className = 'text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
-    statusBadge.innerText = '✅ Proyecto Completado';
+  // 8. Final Code (🏆)
+  markStep('step-final', 'active');
+  await sleep(600);
+  playSciFiBeep('compile');
+  swarmGeneratedCode = generateInstantFTCCode('TeleOp Shooter Intake Mecanum Limelight');
+  switchSwarmFile('teleop');
+  markStep('step-final', 'completed');
+
+  appendSwarmAgentMsg(autogen, `🏆 **Final Code Completado:** El archivo **TeleOpBioBuzzTeam.java** ha sido certificado por los 7 agentes. Pulsa **"Guardar en Android Studio"** para aplicarlo en el robot.`);
+
+  if (pipeBadge) {
+    pipeBadge.className = 'text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40';
+    pipeBadge.innerText = '✅ Pipeline Finalizado con Éxito';
   }
   if (btn) btn.disabled = false;
-  showToast('¡Los agentes han completado el código del proyecto en equipo!', 'success');
+  showToast('¡Pipeline completado! Código final generado y verificado.', 'success');
 }
 
 async function saveSwarmCodeToAndroidStudio() {

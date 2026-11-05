@@ -187,6 +187,57 @@ code, pre, .font-mono {
   40% { transform: scale(1); opacity: 1; }
 }
 
+/* Hotspots interactivos sobre la foto del Cuartel */
+.hq-hotspot {
+  position: absolute;
+  cursor: pointer;
+  transform: translate(-50%, -50%);
+  transition: all 0.25s ease;
+  z-index: 20;
+}
+
+.hq-hotspot:hover {
+  transform: translate(-50%, -50%) scale(1.15);
+}
+
+.hotspot-glow {
+  box-shadow: 0 0 15px currentColor;
+  animation: hotspotPulse 2s infinite ease-in-out;
+}
+
+@keyframes hotspotPulse {
+  0%, 100% { transform: scale(1); opacity: 0.85; }
+  50% { transform: scale(1.18); opacity: 1; }
+}
+
+/* Pasos del Pipeline de Ejecución */
+.pipeline-step {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+.pipeline-step.active {
+  border-color: #06b6d4 !important;
+  background: rgba(6, 182, 212, 0.18) !important;
+  box-shadow: 0 0 25px rgba(6, 182, 212, 0.4);
+  transform: scale(1.03);
+}
+
+.pipeline-step.completed {
+  border-color: #10b981 !important;
+  background: rgba(16, 185, 129, 0.15) !important;
+}
+
+.pipeline-connector {
+  stroke-dasharray: 6 4;
+  animation: flowLine 1.5s linear infinite;
+}
+
+@keyframes flowLine {
+  from { stroke-dashoffset: 20; }
+  to { stroke-dashoffset: 0; }
+}
+
 .circuit-line {
   stroke-dasharray: 8 6;
   animation: circuitFlow 2.5s linear infinite;
